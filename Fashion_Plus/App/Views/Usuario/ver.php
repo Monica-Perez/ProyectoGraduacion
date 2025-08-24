@@ -6,30 +6,31 @@
     <title>Usuarios</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="../public/css/estilos.css">
-
+    <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
 </head>
 <body>
+    <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
             <h3>Fashion Plus</h3>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="<?= URL ?>dashboard"><i class="fas fa-home"></i> Inicio</a></li>
+            <li><a href="<?= URL ?>inicio"><i class="fas fa-home"></i> Inicio</a></li>
             <li><a href="<?= URL ?>usuario/ver" class="active"><i class="fas fa-users"></i> Usuarios</a></li>
             <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
         </ul>
     </div>
 
+    <!-- Contenido principal -->
     <div class="main-content">
         <div class="content-container">
             <div class="header">
                 <div class="header-title">
-                    <h1><i class="fas fa-users text-primary"></i> Lista de Usuarios</h1>
+                    <h1><i class="fas fa-users fa-rosado"></i> Lista de Usuarios</h1>
                     <p class="text-muted">Detalle de usuarios registrados</p>
                 </div>
                 <div class="header-actions">
-                    <a href="<?= URL ?>usuario/registrar" class="btn btn-primary">
+                    <a href="<?= URL ?>usuario/registrar" class="btn btn-rosado">
                         <i class="fas fa-plus"></i> Nuevo Usuario
                     </a>
                 </div>
@@ -43,15 +44,15 @@
                         </div>
                     <?php else: ?>
                         <div class="table-container">
-                            <table class="table table-bordered table-hover" id="tablaUsuarios">
-                                <thead class="thead-dark">
+                            <table class="table table-bordered table-hover">
+                                <thead>
                                     <tr>
                                         <th>ID</th>
                                         <th>Usuario</th>
                                         <th>Rol</th>
                                         <th>Estado</th>
                                         <th>Fecha Creación</th>
-                                        <th>Editar</th> <!-- nueva columna -->
+                                        <th>Editar</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -74,7 +75,6 @@
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
-
                             </table>
                         </div>
                     <?php endif; ?>
@@ -82,16 +82,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        $(document).ready(function(){
-            $("#searchInput").on("keyup", function() {
-                var value = $(this).val().toLowerCase();
-                $("#tablaUsuarios tbody tr").filter(function() {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-                });
-            });
-        });
-    </script>
 </body>
 </html>
