@@ -29,8 +29,9 @@ $usuarios = $datos['usuarios'];
         <li><a href="<?= URL ?>inicio"><i class="fas fa-home"></i> Inicio</a></li>
         <?php if ($_SESSION['usuario']['Rol_us'] === 'admin'): ?>
             <li><a href="<?= URL ?>usuario/ver" class="active"><i class="fas fa-users"></i> Usuarios</a></li>
-        <?php endif; ?>
+        <?php endif; ?> 
         <li><a href="<?= URL ?>empresa/ver"><i class="fas fa-building"></i> Empresas</a></li>
+        <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
