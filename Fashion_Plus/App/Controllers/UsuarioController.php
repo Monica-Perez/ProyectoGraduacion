@@ -54,24 +54,39 @@ class UsuarioController extends Controller {
         $this->view('usuario/ver', ['usuarios' => $usuarios]);
     }
 
-    public function editar($id) {
+public function editar($id = null) {
+        if (!isset($_SESSION)) session_start();
+        if (!isset($_SESSION['usuario'])) {
+            header('Location: ' . URL . 'usuario/login');
+            exit;
+        }
+
         $usuarioModel = $this->model('Usuario');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $_POST['id'];
-            $usuario = $_POST['usuario'];
-            $rol = $_POST['rol'];
-            $estado = $_POST['estado'];
+            $datos = [
+                'usuario' => $_POST['usuario'],
+                'rol'     => $_POST['rol'],
+                'estado'  => $_POST['estado']
+            ];
 
-            $usuarioModel->editar($id, [
-                'usuario' => $usuario,
-                'rol' => $rol,
-                'estado' => $estado
-            ]);
-
-            header('Location: ' . URL . 'usuario/ver');
-            exit;
+            try {
+                $usuarioModel->editar($id, $datos);
+                header('Location: ' . URL . 'usuario/ver');
+                exit;
+            } catch (Exception $e) {
+                $this->view('usuario/editar', [
+                    'usuario' => $datos,
+                    'error' => 'Error al editar el usuario: ' . $e->getMessage()
+                ]);
+            }
         } else {
+            if (!$id) {
+                header('Location: ' . URL . 'usuario/ver');
+                exit;
+            }
+
             $usuario = $usuarioModel->obtenerUsuarioPorId($id);
             $this->view('usuario/editar', ['usuario' => $usuario]);
         }

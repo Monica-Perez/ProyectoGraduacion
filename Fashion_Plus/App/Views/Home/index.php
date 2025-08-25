@@ -1,3 +1,13 @@
+<?php
+if (!isset($_SESSION)) session_start();
+
+if (!isset($_SESSION['usuario'])) {
+    header('Location: ' . URL . 'usuario/login');
+    exit;
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,6 +16,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
+    <link rel="stylesheet" href="<?= URL ?>public/css/inicio.css">
+    
     <style>
         .imagen-logo {
             max-width: 400px;
@@ -40,7 +52,10 @@
         </div>
         <ul class="sidebar-menu">
             <li><a href="<?= URL ?>inicio" class="active"><i class="fas fa-home"></i> Inicio</a></li>
-            <li><a href="<?= URL ?>usuario/ver"><i class="fas fa-users"></i> Usuarios</a></li>
+            <?php if ($_SESSION['usuario']['Rol_us'] === 'admin'): ?>
+                <li><a href="<?= URL ?>usuario/ver"><i class="fas fa-users"></i> Usuarios</a></li>
+            <?php endif; ?>
+            <li><a href="<?= URL ?>empresa/ver"><i class="fas fa-building"></i> Empresas</a></li>
             <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
         </ul>
     </div>

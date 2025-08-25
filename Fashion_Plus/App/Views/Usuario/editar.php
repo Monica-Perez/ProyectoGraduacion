@@ -1,4 +1,13 @@
 <?php
+if (!isset($_SESSION)) session_start();
+
+if (!isset($_SESSION['usuario'])) {
+    header('Location: ' . URL . 'usuario/login');
+    exit;
+}
+?>
+
+<?php
 if (!isset($datos['usuario']) || !$datos['usuario']) {
     echo "<div class='alert alert-danger'>⚠️ Usuario no encontrado.</div>";
     return;
@@ -12,13 +21,8 @@ $usuario = $datos['usuario'];
 <head>
     <meta charset="UTF-8">
     <title>Editar Usuario</title>
-    <!-- Bootstrap 4 o 5 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-    <!-- Tus estilos personalizados -->
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
 
 </head>
@@ -31,6 +35,7 @@ $usuario = $datos['usuario'];
         <ul class="sidebar-menu">
             <li><a href="<?= URL ?>dashboard"><i class="fas fa-home"></i> Inicio</a></li>
             <li><a href="<?= URL ?>usuario/ver"><i class="fas fa-users"></i> Usuarios</a></li>
+        <li><a href="<?= URL ?>empresa/ver"><i class="fas fa-building"></i> Empresas</a></li>
             <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
         </ul>
     </div>
