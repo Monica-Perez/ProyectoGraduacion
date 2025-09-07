@@ -92,7 +92,7 @@ $usuarios = $datos['usuarios'];
                                                 <?= ucfirst($u['Estado_us']) ?>
                                             </span>
                                         </td>
-                                        <td><?= $u['Fecha_Creacion']; ?></td>
+                                        <td><?= date('d/m/Y', strtotime($u['Fecha_Creacion'])) ?></td>
                                         <td>
                                             <a href="<?= URL ?>usuario/editar/<?= $u['ID_us'] ?>" class="btn btn-sm btn-warning mb-1" title="Editar usuario">
                                                 <i class="fas fa-edit"></i>

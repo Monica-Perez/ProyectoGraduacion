@@ -70,4 +70,15 @@ class Empresa {
         }
     }
 
+    public function eliminar($id) {
+        try {
+            $stmt = $this->db->prepare("CALL spEliminarEmpresa(?)");
+            $stmt->bindParam(1, $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Error al eliminar empresa: " . $e->getMessage());
+            return false;
+        }
+    }
 }

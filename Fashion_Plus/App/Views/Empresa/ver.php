@@ -88,14 +88,18 @@ if (!isset($_SESSION['usuario'])) {
                                         <td><?= htmlspecialchars($e['Nombre_emp']) ?></td>
                                         <td><?= htmlspecialchars($e['NIT_emp']) ?></td>
                                         <td><?= htmlspecialchars($e['Contacto_emp']) ?></td>
-                                        <td><?= htmlspecialchars($e['Telefono_emp']) ?></td>
+                                        <td><?= sprintf("%s-%s", substr($e['Telefono_emp'], 0, 4), substr($e['Telefono_emp'], 4, 4)) ?></td>
                                         <td><?= htmlspecialchars($e['Direccion_emp']) ?></td>
                                         <td><?= htmlspecialchars($e['Correo_emp']) ?></td>
                                         <td>
-                                            <a href="<?= URL ?>empresa/editar/<?= $e['ID_emp'] ?>" class="btn btn-warning btn-sm">
+                                            <a href="<?= URL ?>cliente/editar/<?= $c['ID_cli'] ?>" class="btn btn-sm btn-warning" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+                                            <a href="<?= URL ?>cliente/eliminar/<?= $c['ID_cli'] ?>" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este cliente?');">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
                                         </td>
+
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

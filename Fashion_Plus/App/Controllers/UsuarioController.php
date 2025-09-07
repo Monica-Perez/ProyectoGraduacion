@@ -28,14 +28,22 @@ class UsuarioController extends Controller {
     }
 
     public function registrar() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $usuario = $_POST['usuario'];
-            $pass = password_hash($_POST['pass'], PASSWORD_DEFAULT);
-            $rol = $_POST['rol'];
-            $estado = $_POST['estado'];
+        if (!isset($_SESSION)) session_start();
+        if (!isset($_SESSION['usuario'])) {
+            header('Location: ' . URL . 'usuario/login');
+            exit;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $datos = [
+                'usuario' => $_POST['usuario'],
+                'pass' => password_hash($_POST['pass'], PASSWORD_DEFAULT),
+                'rol' => $_POST['rol'],
+                'estado' => $_POST['estado']
+            ];
 
             $usuarioModel = $this->model('Usuario');
-            $exito = $usuarioModel->insertar($usuario, $pass, $rol, $estado);
+            $exito = $usuarioModel->insertar($datos);
 
             if ($exito) {
                 header('Location: ' . URL . 'usuario/ver');

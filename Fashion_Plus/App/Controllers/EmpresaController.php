@@ -1,30 +1,39 @@
 <?php
 class EmpresaController extends Controller {
 
+    public function __construct() {
+        session_start();
+        if (!isset($_SESSION['usuario'])) {
+            header('Location: ' . URL . 'usuario/login');
+            exit;
+        }
+    }
+
     public function registrar() {
+        if (!isset($_SESSION)) session_start();
+        if (!isset($_SESSION['usuario'])) {
+            header('Location: ' . URL . 'usuario/login');
+            exit;
+        }
+        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $nombre = $_POST['nombre'];
-            $nit = $_POST['nit'];
-            $contacto = $_POST['contacto'];
-            $telefono = $_POST['telefono'];
-            $direccion = $_POST['direccion'];
-            $correo = $_POST['correo'];
+            $datos = [
+                'nombre'    => $_POST['nombre'],
+                'nit'       => $_POST['nit'],
+                'contacto'  => $_POST['contacto'],
+                'telefono'  => $_POST['telefono'],
+                'direccion' => $_POST['direccion'],
+                'correo'    => $_POST['correo']
+            ];
 
             $empresaModel = $this->model('Empresa');
-            $exito = $empresaModel->insertar([
-                'nombre' => $nombre,
-                'nit' => $nit,
-                'contacto' => $contacto,
-                'telefono' => $telefono,
-                'direccion' => $direccion,
-                'correo' => $correo
-            ]);
+            $exito = $empresaModel->insertar($datos);
 
             if ($exito) {
                 header('Location: ' . URL . 'empresa/ver');
                 exit;
             } else {
-                $this->view('empresa/registrar', ['error' => 'Error al registrar empresa.']);
+                $this->view('empresa/registrar', ['error' => 'Error al registrar empresa']);
             }
         } else {
             $this->view('empresa/registrar');
@@ -78,4 +87,29 @@ class EmpresaController extends Controller {
             $this->view('empresa/editar', ['empresa' => $empresa]);
         }
     }
+
+public function eliminar($id) {
+    if (!isset($_SESSION)) session_start();
+    if (!isset($_SESSION['usuario'])) {
+        header('Location: ' . URL . 'usuario/login');
+        exit;
+    }
+
+    $empresaModel = $this->model('Empresa');
+
+    try {
+        $exito = $empresaModel->eliminar($id);
+
+        if ($exito) {
+            header('Location: ' . URL . 'empresa/ver');
+            exit;
+        } else {
+            $this->view('empresa/ver', ['error' => 'No se pudo eliminar la empresa.']);
+        }
+    } catch (Exception $e) {
+        $this->view('empresa/ver', ['error' => 'Error al eliminar empresa: ' . $e->getMessage()]);
+    }
+}
+
+
 }

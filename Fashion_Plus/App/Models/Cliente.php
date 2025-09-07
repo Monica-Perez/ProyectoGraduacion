@@ -8,15 +8,14 @@ class Cliente {
 
     public function insertar($datos) {
         try {
-            $stmt = $this->db->prepare("CALL spInsertarCliente(?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepare("CALL spInsertarCliente(?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $datos['ID_emp'],
-                $datos['Nombre_cli'],
-                $datos['Apellido_cli'],
-                $datos['Contacto_cli'],
-                $datos['Telefono_cli'],
-                $datos['Direccion_cli'],
-                $datos['Correo_cli']
+                $datos['nombre'],
+                $datos['apellido'],
+                $datos['telefono'],
+                $datos['direccion'],
+                $datos['correo']
             ]);
             return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
@@ -27,16 +26,15 @@ class Cliente {
 
     public function editar($id, $datos) {
         try {
-            $stmt = $this->db->prepare("CALL spEditarCliente(?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepare("CALL spEditarCliente(?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $id,
                 $datos['ID_emp'],
-                $datos['Nombre_cli'],
-                $datos['Apellido_cli'],
-                $datos['Contacto_cli'],
-                $datos['Telefono_cli'],
-                $datos['Direccion_cli'],
-                $datos['Correo_cli']
+                $datos['nombre'],
+                $datos['apellido'],
+                $datos['telefono'],
+                $datos['direccion'],
+                $datos['correo']
             ]);
             return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
@@ -71,4 +69,17 @@ class Cliente {
             return null;
         }
     }
+
+    public function eliminar($id) {
+        try {
+            $stmt = $this->db->prepare("CALL spEliminarCliente(?)");
+            $stmt->bindParam(1, $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Error al eliminar cliente: " . $e->getMessage());
+            return false;
+        }
+    }
+
 }

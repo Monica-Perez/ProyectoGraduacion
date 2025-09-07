@@ -6,6 +6,7 @@ if (!isset($_SESSION['usuario'])) {
 }
 
 $cliente = $datos['cliente'];
+$empresas = $datos['empresas'];
 ?>
 
 <!DOCTYPE html>
@@ -47,45 +48,60 @@ $cliente = $datos['cliente'];
         <div class="card">
             <div class="card-body">
                 <form method="POST" action="<?= URL ?>cliente/editar/<?= $cliente['ID_cli'] ?>">
+
                     <input type="hidden" name="id" value="<?= $cliente['ID_cli'] ?>">
+                    <!-- Empresa -->
+                    <div class="form-section mb-4">
+                        <h5 class="section-title"><i class="fas fa-building fa-rosado"></i> Empresa Relacionada</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Empresa:</label>
+                            <select name="ID_emp" class="form-select" required>
+                                <option value="">Seleccione una empresa</option>
+                                <?php foreach ($empresas as $e): ?>
+                                    <option value="<?= $e['ID_emp'] ?>" <?= $e['ID_emp'] == $cliente['ID_emp'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($e['Nombre_emp']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
 
-                    <div class="form-section">
-                        <h5 class="section-title"><i class="fas fa-user"></i> Datos Personales</h5>
+                    <!-- Datos Personales -->
+                    <div class="form-section mb-4">
+                        <h5 class="section-title"><i class="fas fa-user fa-rosado"></i> Datos Personales</h5>
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label>Nombre:</label>
-                                    <input type="text" name="nombre" class="form-control" value="<?= $cliente['Nombre_cli'] ?>" required>
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre:</label>
+                                <input type="text" name="nombre" class="form-control" value="<?= $cliente['Nombre_cli'] ?>" required>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label>Apellido:</label>
-                                    <input type="text" name="apellido" class="form-control" value="<?= $cliente['Apellido_cli'] ?>" required>
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellido:</label>
+                                <input type="text" name="apellido" class="form-control" value="<?= $cliente['Apellido_cli'] ?>" required>
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-section">
-                        <h5 class="section-title"><i class="fas fa-address-book"></i> Contacto</h5>
+                    <!-- Contacto -->
+                    <div class="form-section mb-4">
+                        <h5 class="section-title"><i class="fas fa-envelope fa-rosado"></i> Información de Contacto</h5>
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label>Teléfono:</label>
-                                    <input type="text" name="telefono" class="form-control" value="<?= $cliente['Telefono_cli'] ?>" required>
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Teléfono:</label>
+                                <input type="text" name="telefono" class="form-control" value="<?= $cliente['Telefono_cli'] ?>" required>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label>Correo:</label>
-                                    <input type="email" name="correo" class="form-control" value="<?= $cliente['Correo_cli'] ?>" required>
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Correo:</label>
+                                <input type="email" name="correo" class="form-control" value="<?= $cliente['Correo_cli'] ?>" required>
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Dirección:</label>
+                            <input type="text" name="direccion" class="form-control" value="<?= $cliente['Direccion_cli'] ?>" required>
                         </div>
                     </div>
 
-                    <div class="form-group text-end mt-3">
+                    <!-- Botones -->
+                    <div class="form-group text-end">
                         <button type="submit" class="btn btn-rosado">
                             <i class="fas fa-save"></i> Guardar Cambios
                         </button>

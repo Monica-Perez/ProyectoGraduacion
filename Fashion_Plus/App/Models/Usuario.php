@@ -21,16 +21,20 @@ class Usuario {
         return false;
     }
 
-    public function insertar($usuario, $pass, $rol, $estado) {
-        $stmt = $this->db->prepare("CALL spInsertarUsuario(:usuario, :pass, :rol, :estado)");
-        $stmt->bindParam(':usuario', $usuario);
-        $stmt->bindParam(':pass', $pass);
-        $stmt->bindParam(':rol', $rol);
-        $stmt->bindParam(':estado', $estado);
-        $exito = $stmt->execute();
-        $stmt->closeCursor();
-
-        return $exito;
+    public function insertar($datos) {
+        try {
+            $stmt = $this->db->prepare("CALL spInsertarUsuario(?, ?, ?, ?)");
+            $stmt->execute([
+                $datos['usuario'],
+                $datos['pass'],
+                $datos['rol'],
+                $datos['estado']
+            ]);
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Error al insertar usuario: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function ver() {
@@ -79,5 +83,18 @@ class Usuario {
             return false;
         }
     }
+
+    public function eliminar($id) {
+        try {
+            $stmt = $this->db->prepare("CALL spEliminarUsuario(?)");
+            $stmt->bindParam(1, $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Error al eliminar usuario: " . $e->getMessage());
+            return false;
+        }
+    }
+
 
 }
