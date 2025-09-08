@@ -29,6 +29,7 @@ if (!isset($_SESSION['usuario'])) {
         <?php endif; ?>
         <li><a href="<?= URL ?>empresa/ver" class="active"><i class="fas fa-building"></i> Empresas</a></li>
         <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
+        <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -38,7 +39,7 @@ if (!isset($_SESSION['usuario'])) {
         <div class="header">
             <div class="header-title">
                 <h1><i class="fas fa-building fa-rosado"></i> Lista de Empresas</h1>
-                <p class="text-muted">Empresas registradas en el sistema</p>
+                <p class="text-muted">Empresas registradas en el sistema.</p>
             </div>
             <div class="header-actions">
                 <a href="<?= URL ?>empresa/registrar" class="btn btn-rosado">

@@ -23,12 +23,13 @@ if (!isset($_SESSION['usuario'])) {
         <h3>Fashion Plus</h3>
     </div>
     <ul class="sidebar-menu">
-        <li><a href="<?= URL ?>inicio" class="active"><i class="fas fa-home"></i> Inicio</a></li>
+        <li><a href="<?= URL ?>inicio"><i class="fas fa-home"></i> Inicio</a></li>
         <?php if ($_SESSION['usuario']['Rol_us'] === 'admin'): ?>
-            <li><a href="<?= URL ?>usuario/ver"><i class="fas fa-users"></i> Usuarios</a></li>
+            <li><a href="<?= URL ?>usuario/ver" class="active"><i class="fas fa-users"></i> Usuarios</a></li>
         <?php endif; ?>
         <li><a href="<?= URL ?>empresa/ver"><i class="fas fa-building"></i> Empresas</a></li>
         <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
+        <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -51,17 +52,17 @@ if (!isset($_SESSION['usuario'])) {
             <div class="card-body">
                 <form method="POST" action="<?= URL ?>usuario/registrar">
                     <div class="mb-3">
-                        <label class="form-label">Usuario:</label>
+                        <label class="form-label">Usuario</label> <span class="text-danger">*</span>
                         <input type="text" name="usuario" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Contraseña:</label>
+                        <label class="form-label">Contraseña</label> <span class="text-danger">*</span>
                         <input type="password" name="pass" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Rol:</label>
+                        <label class="form-label">Rol</label> <span class="text-danger">*</span>
                         <select name="rol" class="form-select" required>
                             <option value="admin">Admin</option>
                             <option value="vendedor">Vendedor</option>
@@ -69,14 +70,14 @@ if (!isset($_SESSION['usuario'])) {
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Estado:</label>
+                        <label class="form-label">Estado</label> <span class="text-danger">*</span>
                         <select name="estado" class="form-select" required>
                             <option value="activo">Activo</option>
                             <option value="inactivo">Inactivo</option>
                         </select>
                     </div>
 
-                    <div class="form-group text-right">
+                    <div class="form-group text-end">
                         <button type="submit" class="btn btn-rosado">
                             <i class="fas fa-save"></i> Guardar
                         </button>

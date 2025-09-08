@@ -31,6 +31,7 @@ $clientes = $datos['clientes'];
         <?php endif; ?>
         <li><a href="<?= URL ?>empresa/ver"><i class="fas fa-building"></i> Empresas</a></li>
         <li><a href="<?= URL ?>cliente/ver" class="active"><i class="fas fa-user-tie"></i> Clientes</a></li>
+        <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -41,7 +42,7 @@ $clientes = $datos['clientes'];
         <div class="header">
             <div class="header-title">
                 <h1><i class="fas fa-user-tie fa-rosado"></i> Lista de Clientes</h1>
-                <p class="text-muted">Detalle de clientes registrados en el sistema</p>
+                <p class="text-muted">Clientes registrados en el sistema.</p>
             </div>
             <div class="header-actions">
                 <a href="<?= URL ?>cliente/registrar" class="btn btn-rosado">

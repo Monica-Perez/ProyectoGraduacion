@@ -32,6 +32,7 @@ $usuarios = $datos['usuarios'];
         <?php endif; ?> 
         <li><a href="<?= URL ?>empresa/ver"><i class="fas fa-building"></i> Empresas</a></li>
         <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
+        <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -42,7 +43,7 @@ $usuarios = $datos['usuarios'];
         <div class="header">
             <div class="header-title">
                 <h1><i class="fas fa-users fa-rosado"></i> Lista de Usuarios</h1>
-                <p class="text-muted">Detalle de usuarios registrados</p>
+                <p class="text-muted">Usuarios registrados en el sistema.</p>
             </div>
             <div class="header-actions">
                 <a href="<?= URL ?>usuario/registrar" class="btn btn-rosado">
