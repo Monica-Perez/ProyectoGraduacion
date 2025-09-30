@@ -42,9 +42,9 @@ class EmpresaController extends Controller {
 
     public function ver() {
         $empresaModel = $this->model('Empresa');
-        $empresas = $empresaModel->ver();
+        $empresa = $empresaModel->ver();
 
-        $this->view('empresa/ver', ['empresas' => $empresas]);
+        $this->view('empresa/ver', ['empresas' => $empresa]);
     }
 
     public function editar($id = null) {
@@ -88,28 +88,21 @@ class EmpresaController extends Controller {
         }
     }
 
-public function eliminar($id) {
-    if (!isset($_SESSION)) session_start();
-    if (!isset($_SESSION['usuario'])) {
-        header('Location: ' . URL . 'usuario/login');
+    public function eliminar($id = null) {
+        if (!isset($_SESSION)) session_start();
+        if (!isset($_SESSION['usuario'])) {
+            header('Location: ' . URL . 'usuario/login');
+            exit;
+        }
+
+        if ($id) {
+            $empresaModel = $this->model('Empresa');
+            $empresaModel->eliminar($id);
+        }
+
+        header('Location: ' . URL . 'empresa/ver');
         exit;
     }
-
-    $empresaModel = $this->model('Empresa');
-
-    try {
-        $exito = $empresaModel->eliminar($id);
-
-        if ($exito) {
-            header('Location: ' . URL . 'empresa/ver');
-            exit;
-        } else {
-            $this->view('empresa/ver', ['error' => 'No se pudo eliminar la empresa.']);
-        }
-    } catch (Exception $e) {
-        $this->view('empresa/ver', ['error' => 'Error al eliminar empresa: ' . $e->getMessage()]);
-    }
-}
 
 
 }

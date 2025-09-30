@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-08-2025 a las 07:46:24
+-- Tiempo de generación: 30-09-2025 a las 05:59:06
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -33,6 +33,47 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spActualizarUsuario` (IN `p_id` INT
     WHERE ID_us = p_id;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarCliente` (IN `p_ID_cli` INT, IN `p_ID_emp` INT, IN `p_Nombre_cli` VARCHAR(150), IN `p_Apellido_cli` VARCHAR(150), IN `p_Telefono_cli` VARCHAR(11), IN `p_Direccion_cli` VARCHAR(200), IN `p_Correo_cli` VARCHAR(150))   BEGIN
+    UPDATE cliente
+    SET
+        ID_emp = p_ID_emp,
+        Nombre_cli = p_Nombre_cli,
+        Apellido_cli = p_Apellido_cli,
+        Telefono_cli = p_Telefono_cli,
+        Direccion_cli = p_Direccion_cli,
+        Correo_cli = p_Correo_cli
+    WHERE ID_cli = p_ID_cli;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarEmpresa` (IN `p_id` INT, IN `p_nombre` VARCHAR(200), IN `p_nit` VARCHAR(20), IN `p_contacto` VARCHAR(50), IN `p_telefono` VARCHAR(11), IN `p_direccion` VARCHAR(150), IN `p_correo` VARCHAR(120))   BEGIN
+    UPDATE empresa
+    SET Nombre_emp = p_nombre,
+        NIT_emp = p_nit,
+        Contacto_emp = p_contacto,
+        Telefono_emp = p_telefono,
+        Direccion_emp = p_direccion,
+        Correo_emp = p_correo
+    WHERE ID_emp = p_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarPedido` (IN `p_id` INT, IN `p_cliente` INT, IN `p_fecha` DATE, IN `p_descuento` DECIMAL(10,2), IN `p_total` DECIMAL(10,2), IN `p_estado` VARCHAR(50))   BEGIN
+    UPDATE pedidos
+    SET ID_cli = p_cliente,
+        Fecha_ped = p_fecha,
+        Descuento = p_descuento,
+        Total_ped = p_total,
+        Estado = p_estado
+    WHERE ID_ped = p_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarProducto` (IN `p_id` INT, IN `p_nombre` VARCHAR(150), IN `p_descripcion` VARCHAR(255), IN `p_precio` DECIMAL(10,2))   BEGIN
+    UPDATE producto
+    SET Nombre_pro = p_nombre,
+        Descripcion_pro = p_descripcion,
+        Precio_pro = p_precio
+    WHERE ID_pro = p_id;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarUsuario` (IN `p_id` INT, IN `p_usuario` VARCHAR(100), IN `p_rol` VARCHAR(15), IN `p_estado` VARCHAR(15))   BEGIN
     UPDATE usuario
     SET usuario = p_usuario,
@@ -41,9 +82,147 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarUsuario` (IN `p_id` INT, IN
     WHERE ID_us = p_id;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarCliente` (IN `p_id` INT)   BEGIN
+    DELETE FROM cliente WHERE ID_cli = p_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarEmpresa` (IN `p_id` INT)   BEGIN
+	DELETE FROM cliente WHERE ID_emp = p_id;
+    DELETE FROM empresa WHERE ID_emp = p_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarProducto` (IN `p_id` INT)   BEGIN
+    DELETE FROM producto WHERE ID_pro = p_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarUsuario` (IN `p_id` INT)   BEGIN
+    DELETE FROM usuario WHERE ID_us = p_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarCliente` (IN `p_ID_emp` INT, IN `p_Nombre_cli` VARCHAR(150), IN `p_Apellido_cli` VARCHAR(150), IN `p_Telefono_cli` VARCHAR(11), IN `p_Direccion_cli` VARCHAR(200), IN `p_Correo_cli` VARCHAR(150))   BEGIN
+    INSERT INTO cliente (
+        ID_emp, 
+        Nombre_cli, 
+        Apellido_cli,
+        Telefono_cli, 
+        Direccion_cli, 
+        Correo_cli
+    )
+    VALUES (
+		p_ID_emp, 
+        p_Nombre_cli, 
+        p_Apellido_cli,
+        p_Telefono_cli, 
+        p_Direccion_cli, 
+        p_Correo_cli
+    );
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarDetallePedido` (IN `p_id_ped` INT, IN `p_id_pro` INT, IN `p_cantidad` INT, IN `p_precio` DECIMAL(10,2))   BEGIN
+    INSERT INTO detalle_pedido (ID_ped, ID_pro, Cantidad_det, PrecioUnitario_det)
+    VALUES (p_id_ped, p_id_pro, p_cantidad, p_precio);
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarEmpresa` (IN `p_nombre` VARCHAR(200), IN `p_nit` VARCHAR(20), IN `p_contacto` VARCHAR(50), IN `p_telefono` VARCHAR(11), IN `p_direccion` VARCHAR(150), IN `p_correo` VARCHAR(120))   BEGIN
+    INSERT INTO empresa (Nombre_emp, NIT_emp, Contacto_emp, Telefono_emp, Direccion_emp, Correo_emp)
+    VALUES (p_nombre, p_nit, p_contacto, p_telefono, p_direccion, p_correo);
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarPedido` (IN `p_id_cli` INT, IN `p_id_us` INT, IN `p_fecha` DATE, IN `p_descuento` DECIMAL(10,2), IN `p_total` DECIMAL(10,2), IN `p_estado` VARCHAR(10), OUT `p_id_pedido` INT)   BEGIN
+    INSERT INTO pedido (ID_cli, ID_us, Fecha_ped, Descuento, Total_ped, Estado)
+    VALUES (p_id_cli, p_id_us, p_fecha, p_descuento, p_total, p_estado);
+
+    SET p_id_pedido = LAST_INSERT_ID();
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarProducto` (IN `p_nombre` VARCHAR(150), IN `p_descripcion` VARCHAR(255), IN `p_precio` DECIMAL(10,2))   BEGIN
+    INSERT INTO producto (Nombre_pro, Descripcion_pro, Precio_pro)
+    VALUES (p_nombre, p_descripcion, p_precio);
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarUsuario` (IN `p_usuario` VARCHAR(100), IN `p_pass` VARCHAR(255), IN `p_rol` VARCHAR(15), IN `p_estado` VARCHAR(10))   BEGIN
     INSERT INTO usuario (usuario, Pass, Rol_us, Estado_us, Fecha_Creacion)
     VALUES (p_usuario, p_pass, p_rol, p_estado, CURDATE());
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerClientePorID` (IN `p_ID_cli` INT)   BEGIN
+    SELECT 
+        ID_cli,
+        ID_emp,
+        Nombre_cli,
+        Apellido_cli,
+        Telefono_cli,
+        Direccion_cli,
+        Correo_cli
+    FROM cliente
+    WHERE ID_cli = p_ID_cli;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerClientesPorEmpresa` (IN `p_id_emp` INT)   BEGIN
+	SELECT	
+		c.ID_cli,
+		c.ID_emp,
+		c.Nombre_cli,
+		c.Apellido_cli,
+		c.Telefono_cli,
+		c.Direccion_cli,
+		c.Correo_cli
+	FROM cliente c
+	WHERE c.ID_emp = p_id_emp
+	ORDER BY c.Nombre_cli, c.Apellido_cli;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerDetallesPedido` (IN `p_id_ped` INT)   BEGIN
+    SELECT 
+		d.ID_det,
+        d.ID_pro,
+        d.Cantidad_det,
+        d.PrecioUnitario_det,
+        p.Nombre_pro,
+        p.Descripcion_pro
+    FROM detalle_pedido d
+    LEFT JOIN producto p ON d.ID_pro = p.ID_pro
+    WHERE d.ID_ped = p_id_ped;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerEmpresaPorID` (IN `p_id` INT)   BEGIN
+    SELECT 
+		ID_emp,
+        Nombre_emp,
+        NIT_emp,
+        Contacto_emp,
+        Telefono_emp,
+        Direccion_emp,
+        Correo_emp
+    FROM empresa WHERE ID_emp = p_id LIMIT 1;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerPedidoPorID` (IN `p_id` INT)   BEGIN
+    SELECT p.ID_ped,
+           p.ID_cli,
+           p.ID_us,
+           p.Fecha_ped,
+           p.Descuento,
+           p.Total_ped,
+           p.Estado,
+           CONCAT(COALESCE(c.Nombre_cli, ''), ' ', COALESCE(c.Apellido_cli, '')) AS Cliente,
+           c.Nombre_cli,
+           c.Apellido_cli,
+           c.Correo_cli,
+           c.Telefono_cli,
+           u.usuario AS Usuario
+    FROM pedido p
+    LEFT JOIN cliente c ON p.ID_cli = c.ID_cli
+    LEFT JOIN usuario u ON p.ID_us = u.ID_us
+    WHERE p.ID_ped = p_id
+    LIMIT 1;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerProductoPorID` (IN `p_id` INT)   BEGIN
+    SELECT ID_pro, Nombre_pro, Descripcion_pro, Precio_pro
+    FROM producto
+    WHERE ID_pro = p_id
+    LIMIT 1;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerUsuarioPorID` (IN `p_id` INT)   BEGIN
@@ -53,6 +232,32 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerUsuarioPorID` (IN `p_id` I
     LIMIT 1;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerClientes` ()   BEGIN
+    SELECT 
+        ID_cli,
+        Nombre_emp,
+        Nombre_cli,
+        Apellido_cli,
+        Telefono_cli,
+        Direccion_cli,
+        Correo_cli
+    FROM cliente c
+    INNER JOIN empresa e ON c.ID_emp = e.ID_emp
+    ORDER BY ID_cli DESC;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerEmpresas` ()   BEGIN
+    SELECT 
+		ID_emp,
+        Nombre_emp,
+        NIT_emp,
+        Contacto_emp,
+        Telefono_emp,
+        Direccion_emp,
+        Correo_emp
+	FROM empresa ORDER BY ID_emp DESC;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerificarUsuario` (IN `p_usuario` VARCHAR(100))   BEGIN
     SELECT ID_us, usuario, Pass, Rol_us, Estado_us
     FROM usuario
@@ -60,10 +265,36 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerificarUsuario` (IN `p_usuario`
     LIMIT 1;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerPedidos` ()   BEGIN
+	SELECT p.ID_ped,
+           p.ID_cli,
+           p.ID_us,
+           p.Fecha_ped,
+           p.Descuento,
+           p.Total_ped,
+           p.Estado,
+           CONCAT(COALESCE(c.Nombre_cli, ''), ' ', COALESCE(c.Apellido_cli, '')) AS Cliente,
+           c.Nombre_cli,
+           c.Apellido_cli,
+           c.Correo_cli,
+           c.Telefono_cli,
+           u.usuario AS Usuario
+    FROM pedido p
+    LEFT JOIN cliente c ON p.ID_cli = c.ID_cli
+    LEFT JOIN usuario u ON p.ID_us = u.ID_us
+    ORDER BY p.ID_ped DESC;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerProductos` ()   BEGIN
+    SELECT ID_pro, Nombre_pro, Descripcion_pro, Precio_pro
+    FROM producto
+    ORDER BY ID_pro DESC;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerUsuarios` ()   BEGIN
     SELECT ID_us, usuario, Rol_us, Estado_us, Fecha_Creacion
     FROM usuario
-    ORDER BY ID_us DESC;
+    ORDER BY ID_us;
 END$$
 
 DELIMITER ;
@@ -93,11 +324,18 @@ CREATE TABLE `cliente` (
   `ID_emp` int(11) DEFAULT NULL,
   `Nombre_cli` varchar(150) DEFAULT NULL,
   `Apellido_cli` varchar(150) DEFAULT NULL,
-  `Contacto_cli` varchar(150) DEFAULT NULL,
   `Telefono_cli` varchar(11) DEFAULT NULL,
   `Direccion_cli` varchar(200) DEFAULT NULL,
   `Correo_cli` varchar(150) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `cliente`
+--
+
+INSERT INTO `cliente` (`ID_cli`, `ID_emp`, `Nombre_cli`, `Apellido_cli`, `Telefono_cli`, `Direccion_cli`, `Correo_cli`) VALUES
+(3, 2, 'Juan Marcos', 'Lopez', '87569830', 'Calzada Roosevelt 10-20, Zona 7', 'jl@gmail.com'),
+(8, 6, 'Javier', 'Avalos', '77777777', 'Calzada Roosevelt 10-20, Zona 7', 'jl@gmail.com');
 
 -- --------------------------------------------------------
 
@@ -112,6 +350,13 @@ CREATE TABLE `detalle_pedido` (
   `Cantidad_det` int(11) DEFAULT NULL,
   `PrecioUnitario_det` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `detalle_pedido`
+--
+
+INSERT INTO `detalle_pedido` (`ID_det`, `ID_ped`, `ID_pro`, `Cantidad_det`, `PrecioUnitario_det`) VALUES
+(1, 1, 2, 2, 75.00);
 
 -- --------------------------------------------------------
 
@@ -129,6 +374,16 @@ CREATE TABLE `empresa` (
   `Correo_emp` varchar(120) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `empresa`
+--
+
+INSERT INTO `empresa` (`ID_emp`, `Nombre_emp`, `NIT_emp`, `Contacto_emp`, `Telefono_emp`, `Direccion_emp`, `Correo_emp`) VALUES
+(1, 'Tabcin', '11111', 'Juan Perez', '52369857', 'Calzada Roosevelt 10-20, Zona 7', 'jp@gmail.com'),
+(2, 'Cafetalito', '22222', 'Maria Lopez', '78596325', 'Parroquia zona 6', 'ml@gmail.com'),
+(5, 'Pollo Campero', '1256987', 'Maria Lopez', '85698569', 'Zona 16', 'pc@gmail.com'),
+(6, 'Samsung', '8965230', 'Lucas Lopez', '78963201', 'Calzada Roosevelt 10-20, Zona 7', 'ml@gmail.com');
+
 -- --------------------------------------------------------
 
 --
@@ -145,6 +400,13 @@ CREATE TABLE `pedido` (
   `Estado` varchar(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `pedido`
+--
+
+INSERT INTO `pedido` (`ID_ped`, `ID_cli`, `ID_us`, `Fecha_ped`, `Descuento`, `Total_ped`, `Estado`) VALUES
+(1, 8, 2, '2025-09-29', 0.00, 150.00, 'pendiente');
+
 -- --------------------------------------------------------
 
 --
@@ -153,10 +415,17 @@ CREATE TABLE `pedido` (
 
 CREATE TABLE `producto` (
   `ID_pro` int(11) NOT NULL,
-  `Nombre_pro` int(11) DEFAULT NULL,
-  `Descripcion_pro` int(11) DEFAULT NULL,
+  `Nombre_pro` varchar(150) DEFAULT NULL,
+  `Descripcion_pro` varchar(255) DEFAULT NULL,
   `Precio_pro` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `producto`
+--
+
+INSERT INTO `producto` (`ID_pro`, `Nombre_pro`, `Descripcion_pro`, `Precio_pro`) VALUES
+(2, 'Polo Sincatex', 'Camisa tipo polo en tela sincatex', 75.00);
 
 -- --------------------------------------------------------
 
@@ -180,7 +449,13 @@ CREATE TABLE `usuario` (
 INSERT INTO `usuario` (`ID_us`, `usuario`, `Pass`, `Rol_us`, `Estado_us`, `Fecha_Creacion`) VALUES
 (2, 'admin', '$2y$10$hCy3EoBOZW84zb8IjZ7DbOx.XXEs/2G.uG8G6rZZkn8M31YOhGDCC', 'admin', 'activo', '2025-08-12'),
 (3, 'vendedor', '$2y$10$wVlsym/8gSMyAuno5UdoH.Rj9Iw9sr15x3xa1bnra3i4KbzZ8szVi', 'vendedor', 'activo', '2025-08-13'),
-(4, 'vendedor3', '$2y$10$yi6Q6Pp8c7YNs1ej.uEUW.0M6Ztg0A7sQI04lZicGVbbZOrWlvioi', 'vendedor', 'activo', '2025-08-13');
+(4, 'vendedor3', '$2y$10$yi6Q6Pp8c7YNs1ej.uEUW.0M6Ztg0A7sQI04lZicGVbbZOrWlvioi', 'vendedor', 'activo', '2025-08-13'),
+(5, 'Monica', '$2y$10$n0II1.ddhw7UGCIuUgtFiunOTZTl8Y8uvlhBSTHqfSqeM95y9Hrlq', 'vendedor', 'activo', '2025-08-15'),
+(6, 'adminEditado', '$2y$10$Q/YxfehLV.5zSdz6UqUoUOkYk5WzGuVAYaKow6HICbGkjeJj0hEQi', 'admin', 'activo', '2025-08-15'),
+(7, 'admin', '$2y$10$pn/NGRj0RAxVhp6lbLKBm.jigCV71a71KzSuVm5ImKEpiXhor3EEO', 'admin', 'activo', '2025-08-15'),
+(8, 'jaiva', '$2y$10$EsryTNYiWOUgwC5YCHVmUuvzyOGfOU1M88MTY24018MK/giQSAGMW', 'vendedor', 'activo', '2025-08-16'),
+(9, 'pruebaadmin', '$2y$10$bZJAoNguSsKn1ZwQuyZdf.AdgXucrDVbB3BFONpXF.XdyiqRs5TWa', 'admin', 'activo', '2025-08-27'),
+(10, 'CasoPrueba', '$2y$10$zIip2eBcLgRvT0WrTiGyGurxTwkPBQ/2cWaUUGY0AvBECmKYxkcj2', 'admin', 'activo', '2025-09-07');
 
 --
 -- Índices para tablas volcadas
@@ -248,37 +523,37 @@ ALTER TABLE `abono`
 -- AUTO_INCREMENT de la tabla `cliente`
 --
 ALTER TABLE `cliente`
-  MODIFY `ID_cli` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID_cli` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_pedido`
 --
 ALTER TABLE `detalle_pedido`
-  MODIFY `ID_det` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID_det` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `empresa`
 --
 ALTER TABLE `empresa`
-  MODIFY `ID_emp` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID_emp` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  MODIFY `ID_ped` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID_ped` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `producto`
 --
 ALTER TABLE `producto`
-  MODIFY `ID_pro` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID_pro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `ID_us` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `ID_us` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Restricciones para tablas volcadas

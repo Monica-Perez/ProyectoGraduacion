@@ -35,9 +35,10 @@ $usuario = $datos['usuario'];
         <ul class="sidebar-menu">
             <li><a href="<?= URL ?>dashboard"><i class="fas fa-home"></i> Inicio</a></li>
             <li><a href="<?= URL ?>usuario/ver"><i class="fas fa-users"></i> Usuarios</a></li>
-        <li><a href="<?= URL ?>empresa/ver"><i class="fas fa-building"></i> Empresas</a></li>
-        <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
-        <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
+            <li><a href="<?= URL ?>empresa/ver"><i class="fas fa-building"></i> Empresas</a></li>
+            <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
+            <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
+            <li><a href="<?= URL ?>pedido/ver"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
             <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
         </ul>
     </div>

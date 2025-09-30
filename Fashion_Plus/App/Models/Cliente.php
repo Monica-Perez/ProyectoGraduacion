@@ -82,4 +82,21 @@ class Cliente {
         }
     }
 
+    public function obtenerClientesPorEmpresa($id) {
+        try {
+            $stmt = $this->db->prepare("CALL spObtenerClientesPorEmpresa(?)");
+            $stmt->bindParam(1, $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC); // <-- todos los registros
+            $stmt->closeCursor();
+
+            return $clientes ?: []; // siempre devuelve array
+        } catch (PDOException $e) {
+            error_log("Error al obtener Clientes por Empresa: " . $e->getMessage());
+            return [];
+        }
+    }
+
+
 }

@@ -30,6 +30,7 @@ if (!isset($_SESSION['usuario'])) {
         <li><a href="<?= URL ?>empresa/ver" class="active"><i class="fas fa-building"></i> Empresas</a></li>
         <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
         <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
+        <li><a href="<?= URL ?>pedido/ver"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -93,12 +94,14 @@ if (!isset($_SESSION['usuario'])) {
                                         <td><?= htmlspecialchars($e['Direccion_emp']) ?></td>
                                         <td><?= htmlspecialchars($e['Correo_emp']) ?></td>
                                         <td>
-                                            <a href="<?= URL ?>cliente/editar/<?= $c['ID_cli'] ?>" class="btn btn-sm btn-warning" title="Editar">
+                                            <a href="<?= URL ?>empresa/editar/<?= $e['ID_emp'] ?>" class="btn btn-warning btn-sm">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="<?= URL ?>cliente/eliminar/<?= $c['ID_cli'] ?>" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este cliente?');">
+
+                                            <a href="<?= URL ?>empresa/eliminar/<?= $e['ID_emp'] ?>" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta empresa?');">
                                                 <i class="fas fa-trash-alt"></i>
                                             </a>
+
                                         </td>
 
                                     </tr>

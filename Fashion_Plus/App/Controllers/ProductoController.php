@@ -70,6 +70,7 @@ class ProductoController extends Controller {
     }
 
     public function eliminar($id = null) {
+        
         if ($id) {
             $productoModel = $this->model('Producto');
             $productoModel->eliminar($id);
