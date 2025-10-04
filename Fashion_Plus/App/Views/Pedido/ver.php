@@ -11,17 +11,12 @@ $estados = $datos['estados'] ?? [];
 
 function estadoBadgeClass($estado) {
     switch (strtolower($estado)) {
-        case 'completado':
-            return 'bg-success';
-        case 'en proceso':
-            return 'bg-warning text-dark';
-        case 'cancelado':
-            return 'bg-danger';
-        default:
-            return 'bg-secondary';
+        case 'completado': return 'bg-success';
+        case 'en proceso': return 'bg-warning text-dark';
+        case 'cancelado':  return 'bg-danger';
+        default:           return 'bg-secondary';
     }
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -31,31 +26,13 @@ function estadoBadgeClass($estado) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
-    <!-- <style>
-        .table-details {
-            background-color: #f8f9fa;
-        }
-        .badge {
-            font-size: 0.75rem;
-        }
-        .pedido-total {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-        .pedido-desglose span {
-            display: block;
-        }
-        .btn-link {
-            text-decoration: none;
-        }
-    </style> -->
 </head>
 <body>
 <div class="sidebar">
     <div class="sidebar-header"><h3>Fashion Plus</h3></div>
     <ul class="sidebar-menu">
         <li><a href="<?= URL ?>inicio"><i class="fas fa-home"></i> Inicio</a></li>
-        <?php if ($_SESSION['usuario']['Rol_us'] === 'admin'): ?>
+        <?php if (($_SESSION['usuario']['Rol_us'] ?? '') === 'admin'): ?>
             <li><a href="<?= URL ?>usuario/ver"><i class="fas fa-users"></i> Usuarios</a></li>
         <?php endif; ?>
         <li><a href="<?= URL ?>empresa/ver"><i class="fas fa-building"></i> Empresas</a></li>
@@ -113,7 +90,7 @@ function estadoBadgeClass($estado) {
                                 <?php foreach ($pedidos as $pedido): ?>
                                     <?php $collapseId = 'pedido-' . $pedido['ID_ped']; ?>
                                     <tr class="pedido-row">
-                                        <td><?= $pedido['ID_ped']; ?></td>
+                                        <td><?= (int)$pedido['ID_ped']; ?></td>
                                         <td>
                                             <strong><?= htmlspecialchars(trim($pedido['Cliente'])) ?: 'Sin cliente asignado'; ?></strong><br>
                                             <?php if (!empty($pedido['Correo_cli'])): ?>
@@ -139,23 +116,17 @@ function estadoBadgeClass($estado) {
                                         <td class="pedido-total">Q<?= number_format((float)($pedido['Total_ped'] ?? 0), 2); ?></td>
                                         <td class="text-center">
                                             <div class="btn-group" role="group">
-                                                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#<?= $collapseId; ?>" aria-expanded="false" aria-controls="<?= $collapseId; ?>">
+                                                <button class="btn btn-sm btn-outline-primary" type="button"
+                                                        data-bs-toggle="collapse" data-bs-target="#<?= $collapseId; ?>"
+                                                        aria-expanded="false" aria-controls="<?= $collapseId; ?>"
+                                                        title="Ver detalle rápido">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <a href="<?= URL ?>pedido/detalle/<?= $pedido['ID_ped']; ?>" class="btn btn-sm btn-outline-secondary" title="Ver en detalle">
-                                                    <i class="fas fa-file-alt"></i>
+                                                <a href="<?= URL ?>pedido/editar/<?= (int)$pedido['ID_ped']; ?>"
+                                                   class="btn btn-sm btn-outline-warning" title="Editar pedido">
+                                                    <i class="fas fa-edit"></i>
                                                 </a>
                                             </div>
-                                            <form method="POST" action="<?= URL ?>pedido/actualizarEstado" class="mt-2">
-                                                <input type="hidden" name="pedido_id" value="<?= $pedido['ID_ped']; ?>">
-                                                <select name="estado" class="form-select form-select-sm" onchange="this.form.submit()">
-                                                    <?php foreach ($estados as $estado): ?>
-                                                        <option value="<?= htmlspecialchars($estado); ?>" <?= (strcasecmp($estado, $pedido['Estado'] ?? '') === 0) ? 'selected' : ''; ?>>
-                                                            <?= htmlspecialchars(ucwords($estado)); ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </form>
                                         </td>
                                     </tr>
                                     <tr class="detalle-row">
@@ -177,12 +148,16 @@ function estadoBadgeClass($estado) {
                                                                 </thead>
                                                                 <tbody>
                                                                     <?php foreach ($pedido['detalles'] as $detalle): ?>
-                                                                        <?php $lineaTotal = (float)($detalle['Cantidad_det'] ?? 0) * (float)($detalle['PrecioUnitario_det'] ?? 0); ?>
-                                                                        <?php $subtotal += $lineaTotal; ?>
+                                                                        <?php
+                                                                            $cant = (float)($detalle['Cantidad_det'] ?? 0);
+                                                                            $pre  = (float)($detalle['PrecioUnitario_det'] ?? 0);
+                                                                            $lineaTotal = $cant * $pre;
+                                                                            $subtotal += $lineaTotal;
+                                                                        ?>
                                                                         <tr>
                                                                             <td><?= htmlspecialchars($detalle['Nombre_pro'] ?? 'Producto'); ?></td>
-                                                                            <td class="text-center"><?= (int)($detalle['Cantidad_det'] ?? 0); ?></td>
-                                                                            <td class="text-end">Q<?= number_format((float)($detalle['PrecioUnitario_det'] ?? 0), 2); ?></td>
+                                                                            <td class="text-center"><?= (int)$cant; ?></td>
+                                                                            <td class="text-end">Q<?= number_format($pre, 2); ?></td>
                                                                             <td class="text-end">Q<?= number_format($lineaTotal, 2); ?></td>
                                                                         </tr>
                                                                     <?php endforeach; ?>
@@ -190,7 +165,7 @@ function estadoBadgeClass($estado) {
                                                             </table>
                                                         </div>
                                                     <?php else: ?>
-                                                        <div class="alert alert-light border">No se registraron productos en este pedido.</div>
+                                                        <div class="alert alert-light border mb-0">No se registraron productos en este pedido.</div>
                                                     <?php endif; ?>
                                                     <div class="row justify-content-end mt-3">
                                                         <div class="col-md-4">
@@ -229,7 +204,7 @@ function estadoBadgeClass($estado) {
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(function () {
         $('#searchInput').on('keyup', function () {
             const value = $(this).val().toLowerCase();
             $('#pedidoTable tbody tr.pedido-row').each(function () {
