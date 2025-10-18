@@ -80,7 +80,7 @@ function h($s){ return htmlspecialchars((string)$s); }
 
         <div class="card">
             <div class="card-body">
-                <form method="POST" action="<?= URL ?>pedido/actualizar">
+                <form method="POST" action="<?= URL ?>pedido/editar">
                     <input type="hidden" name="ID_ped" value="<?= h($idPed) ?>">
 
                     <div class="row">

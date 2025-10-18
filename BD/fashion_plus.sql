@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 30-09-2025 a las 05:59:06
+-- Tiempo de generación: 18-10-2025 a las 07:10:48
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -57,13 +57,14 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarEmpresa` (IN `p_id` INT, IN
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarPedido` (IN `p_id` INT, IN `p_cliente` INT, IN `p_fecha` DATE, IN `p_descuento` DECIMAL(10,2), IN `p_total` DECIMAL(10,2), IN `p_estado` VARCHAR(50))   BEGIN
-    UPDATE pedidos
+    UPDATE pedido
     SET ID_cli = p_cliente,
         Fecha_ped = p_fecha,
         Descuento = p_descuento,
         Total_ped = p_total,
         Estado = p_estado
     WHERE ID_ped = p_id;
+    SELECT ROW_COUNT() AS filas;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarProducto` (IN `p_id` INT, IN `p_nombre` VARCHAR(150), IN `p_descripcion` VARCHAR(255), IN `p_precio` DECIMAL(10,2))   BEGIN
@@ -86,9 +87,20 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarCliente` (IN `p_id` INT) 
     DELETE FROM cliente WHERE ID_cli = p_id;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarDetallesPedido` (IN `p_id_ped` INT)   BEGIN
+  DELETE FROM detalle_pedido
+  WHERE ID_ped = p_id_ped;
+  SELECT ROW_COUNT() AS filas;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarEmpresa` (IN `p_id` INT)   BEGIN
 	DELETE FROM cliente WHERE ID_emp = p_id;
     DELETE FROM empresa WHERE ID_emp = p_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarPedido` (IN `p_id` INT)   BEGIN
+    DELETE FROM pedidos WHERE ID_ped = p_id;
+    SELECT ROW_COUNT() AS filas;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarProducto` (IN `p_id` INT)   BEGIN
@@ -118,9 +130,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarCliente` (IN `p_ID_emp` I
     );
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarDetallePedido` (IN `p_id_ped` INT, IN `p_id_pro` INT, IN `p_cantidad` INT, IN `p_precio` DECIMAL(10,2))   BEGIN
-    INSERT INTO detalle_pedido (ID_ped, ID_pro, Cantidad_det, PrecioUnitario_det)
-    VALUES (p_id_ped, p_id_pro, p_cantidad, p_precio);
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarDetallePedido` (IN `p_id_ped` INT, IN `p_id_pro` INT, IN `p_cantidad` DECIMAL(10,2), IN `p_precio` DECIMAL(10,2))   BEGIN
+  INSERT INTO detalle_pedido (ID_ped, ID_pro, Cantidad_det, PrecioUnitario_det) 
+  VALUES (p_id_ped, p_id_pro, p_cantidad, p_precio);
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarEmpresa` (IN `p_nombre` VARCHAR(200), IN `p_nit` VARCHAR(20), IN `p_contacto` VARCHAR(50), IN `p_telefono` VARCHAR(11), IN `p_direccion` VARCHAR(150), IN `p_correo` VARCHAR(120))   BEGIN
@@ -198,22 +210,16 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerEmpresaPorID` (IN `p_id` I
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerPedidoPorID` (IN `p_id` INT)   BEGIN
-    SELECT p.ID_ped,
-           p.ID_cli,
-           p.ID_us,
-           p.Fecha_ped,
-           p.Descuento,
-           p.Total_ped,
-           p.Estado,
-           CONCAT(COALESCE(c.Nombre_cli, ''), ' ', COALESCE(c.Apellido_cli, '')) AS Cliente,
-           c.Nombre_cli,
-           c.Apellido_cli,
-           c.Correo_cli,
-           c.Telefono_cli,
-           u.usuario AS Usuario
-    FROM pedido p
-    LEFT JOIN cliente c ON p.ID_cli = c.ID_cli
-    LEFT JOIN usuario u ON p.ID_us = u.ID_us
+	SELECT p.ID_ped,
+        e.ID_emp,
+        c.ID_cli,
+		p.Fecha_ped,
+		p.Estado,
+		p.Descuento,
+		p.Total_ped
+	FROM pedido p
+	LEFT JOIN cliente c ON p.ID_cli = c.ID_cli
+	LEFT JOIN empresa e ON c.ID_emp = e.ID_emp
     WHERE p.ID_ped = p_id
     LIMIT 1;
 END$$
@@ -267,18 +273,14 @@ END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerPedidos` ()   BEGIN
 	SELECT p.ID_ped,
-           p.ID_cli,
-           p.ID_us,
-           p.Fecha_ped,
-           p.Descuento,
-           p.Total_ped,
-           p.Estado,
            CONCAT(COALESCE(c.Nombre_cli, ''), ' ', COALESCE(c.Apellido_cli, '')) AS Cliente,
-           c.Nombre_cli,
-           c.Apellido_cli,
            c.Correo_cli,
            c.Telefono_cli,
-           u.usuario AS Usuario
+           p.Fecha_ped,
+           u.usuario AS Usuario,
+           p.Estado,
+           p.Descuento,
+           p.Total_ped
     FROM pedido p
     LEFT JOIN cliente c ON p.ID_cli = c.ID_cli
     LEFT JOIN usuario u ON p.ID_us = u.ID_us
@@ -356,7 +358,7 @@ CREATE TABLE `detalle_pedido` (
 --
 
 INSERT INTO `detalle_pedido` (`ID_det`, `ID_ped`, `ID_pro`, `Cantidad_det`, `PrecioUnitario_det`) VALUES
-(1, 1, 2, 2, 75.00);
+(6, 1, 2, 2, 75.00);
 
 -- --------------------------------------------------------
 
@@ -405,7 +407,7 @@ CREATE TABLE `pedido` (
 --
 
 INSERT INTO `pedido` (`ID_ped`, `ID_cli`, `ID_us`, `Fecha_ped`, `Descuento`, `Total_ped`, `Estado`) VALUES
-(1, 8, 2, '2025-09-29', 0.00, 150.00, 'pendiente');
+(1, 8, 2, '2025-09-29', 5.00, 145.00, 'pendiente');
 
 -- --------------------------------------------------------
 
@@ -453,7 +455,7 @@ INSERT INTO `usuario` (`ID_us`, `usuario`, `Pass`, `Rol_us`, `Estado_us`, `Fecha
 (5, 'Monica', '$2y$10$n0II1.ddhw7UGCIuUgtFiunOTZTl8Y8uvlhBSTHqfSqeM95y9Hrlq', 'vendedor', 'activo', '2025-08-15'),
 (6, 'adminEditado', '$2y$10$Q/YxfehLV.5zSdz6UqUoUOkYk5WzGuVAYaKow6HICbGkjeJj0hEQi', 'admin', 'activo', '2025-08-15'),
 (7, 'admin', '$2y$10$pn/NGRj0RAxVhp6lbLKBm.jigCV71a71KzSuVm5ImKEpiXhor3EEO', 'admin', 'activo', '2025-08-15'),
-(8, 'jaiva', '$2y$10$EsryTNYiWOUgwC5YCHVmUuvzyOGfOU1M88MTY24018MK/giQSAGMW', 'vendedor', 'activo', '2025-08-16'),
+(8, 'jaiva', '$2y$10$EsryTNYiWOUgwC5YCHVmUuvzyOGfOU1M88MTY24018MK/giQSAGMW', 'vendedor', 'inactivo', '2025-08-16'),
 (9, 'pruebaadmin', '$2y$10$bZJAoNguSsKn1ZwQuyZdf.AdgXucrDVbB3BFONpXF.XdyiqRs5TWa', 'admin', 'activo', '2025-08-27'),
 (10, 'CasoPrueba', '$2y$10$zIip2eBcLgRvT0WrTiGyGurxTwkPBQ/2cWaUUGY0AvBECmKYxkcj2', 'admin', 'activo', '2025-09-07');
 
@@ -529,7 +531,7 @@ ALTER TABLE `cliente`
 -- AUTO_INCREMENT de la tabla `detalle_pedido`
 --
 ALTER TABLE `detalle_pedido`
-  MODIFY `ID_det` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `ID_det` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `empresa`

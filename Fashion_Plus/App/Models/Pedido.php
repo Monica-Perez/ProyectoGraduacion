@@ -110,21 +110,6 @@ class Pedido {
         }
     }
 
-    /** ACTUALIZAR SOLO ESTADO (desde listado, si lo usas) */
-    public function actualizarEstado($id, $estado) {
-        try {
-            $stmt = $this->db->prepare("CALL spActualizarEstadoPedido(?, ?)");
-            $stmt->bindParam(1, $id, PDO::PARAM_INT);
-            $stmt->bindParam(2, $estado, PDO::PARAM_STR);
-            $ok = $stmt->execute();
-            $stmt->closeCursor();
-            return $ok;
-        } catch (PDOException $e) {
-            error_log("Error al actualizar estado del pedido: " . $e->getMessage());
-            return false;
-        }
-    }
-
     /** DETALLE POR PEDIDO */
     public function obtenerDetallesPedido($pedidoId) {
         try {
@@ -140,62 +125,82 @@ class Pedido {
         }
     }
 
-    /**
-     * === NUEVO ===
-     * Actualiza TODO el pedido en una sola operación:
-     * 1) Actualiza encabezado
-     * 2) Elimina detalle existente
-     * 3) Inserta detalle nuevo
-     * 4) Recalcula totales
-     *
-     * @param array $datosPedido  (ID_ped, ID_emp?, ID_cli, ID_us, Fecha_ped, Descuento, Total_ped, Estado)
-     * @param array $detalles     Array de ['ID_pro','Cantidad','Precio']
-     * @return bool
-     */
-    public function actualizarPedidoCompleto($datosPedido, $detalles) {
-    try {
-        $this->db->beginTransaction();
 
-        // 1) Actualizar ENCABEZADO
-        // CALL spEditarPedido(p_id, p_cliente, p_fecha, p_descuento, p_total, p_estado)
-        $stmtEnc = $this->db->prepare("CALL spEditarPedido(?, ?, ?, ?, ?, ?)");
-        $stmtEnc->execute([
-            (int)$datosPedido['ID_ped'],
-            (int)$datosPedido['ID_cli'],
-            $datosPedido['Fecha_ped'],
-            (float)$datosPedido['Descuento'],
-            (float)$datosPedido['Total_ped'],   // total ya calculado en PHP
-            (string)$datosPedido['Estado']      // 'pendiente' | 'en proceso' | ...
-        ]);
-        $stmtEnc->closeCursor();
+    public function editar($id, $datos)
+    {
+        try {
+            if (empty($id) || empty($datos['ID_cli']) || empty($datos['fecha']) || !isset($datos['total'])) {
+                throw new Exception("Datos incompletos para editar pedido");
+            }
 
-        // 2) LIMPIAR DETALLE
-        $stmtDel = $this->db->prepare("CALL spEliminarDetallesPedido(?)");
-        $stmtDel->execute([(int)$datosPedido['ID_ped']]);
-        $stmtDel->closeCursor();
+            $detalle = $datos['detalle'] ?? [];
+            if (empty($detalle)) {
+                throw new Exception("El detalle no puede estar vacío");
+            }
 
-        // 3) INSERTAR NUEVO DETALLE
-        // CALL spInsertarDetallePedido(pedido, producto, cantidad, precio)
-        $stmtDet = $this->db->prepare("CALL spInsertarDetallePedido(?, ?, ?, ?)");
-        foreach ($detalles as $d) {
-            $stmtDet->execute([
-                (int)$datosPedido['ID_ped'],
-                (int)$d['ID_pro'],
-                (float)$d['Cantidad'],
-                (float)$d['Precio']
+            $this->db->beginTransaction();
+
+            // 1️⃣ Editar encabezado del pedido
+            $stmt = $this->db->prepare("CALL spEditarPedido(?,?,?,?,?,?)");
+            $stmt->execute([
+                $id,
+                $datos['ID_cli'],
+                $datos['fecha'],
+                $datos['descuento'] ?? 0,
+                $datos['total'],
+                $datos['estado']
             ]);
-            $stmtDet->closeCursor();
+            $stmt->closeCursor();
+
+            // 2️⃣ Eliminar los detalles anteriores
+            $stmt = $this->db->prepare("CALL spEliminarDetallesPedido(?)");
+            $stmt->execute([$id]);
+            $stmt->closeCursor();
+
+            // 3️⃣ Insertar nuevamente los detalles
+            $stmtDet = $this->db->prepare("CALL spInsertarDetallePedido(?,?,?,?)");
+            foreach ($detalle as $d) {
+                $stmtDet->execute([
+                    $id,
+                    $d['ID_pro'],
+                    $d['cantidad'],
+                    $d['precio']
+                ]);
+                $stmtDet->closeCursor();
+            }
+
+            $this->db->commit();
+            return true;
+
+        } catch (Throwable $e) {
+            $this->db->rollBack();
+            error_log("Error al editar pedido: " . $e->getMessage());
+            return false;
         }
-
-        $this->db->commit();
-        return true;
-
-    } catch (Throwable $e) {
-        if ($this->db->inTransaction()) $this->db->rollBack();
-        error_log("actualizarPedidoCompleto(): ".$e->getMessage());
-        return false;
     }
-}
 
+    /** ELIMINAR PEDIDO + DETALLES */
+    public function eliminar($id) {
+        try {
+            $this->db->beginTransaction();
+
+            // 1️⃣ Eliminar detalles
+            $stmt = $this->db->prepare("CALL spEliminarDetallesPedido(?)");
+            $stmt->execute([$id]);
+            $stmt->closeCursor();
+
+            // 2️⃣ Eliminar encabezado
+            $stmt = $this->db->prepare("CALL spEliminarPedido(?)");
+            $stmt->execute([$id]);
+            $stmt->closeCursor();
+
+            $this->db->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            error_log("Error al eliminar pedido: " . $e->getMessage());
+            return false;
+        }
+    }
 
 }
