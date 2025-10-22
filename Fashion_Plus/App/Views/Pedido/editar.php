@@ -4,7 +4,7 @@ if (!isset($_SESSION['usuario'])) { header('Location: ' . URL . 'usuario/login')
 
 $pedido    = $datos['pedido']    ?? [];
 $empresas  = $datos['empresas']  ?? [];
-$clientes  = $datos['clientes']  ?? []; // clientes ya filtrados por la empresa del pedido
+$clientes  = $datos['clientes']  ?? [];
 $productos = $datos['productos'] ?? [];
 $estados   = $datos['estados']   ?? ['pendiente', 'en proceso', 'completado', 'cancelado'];
 $errores   = $datos['errores']   ?? [];
@@ -16,7 +16,7 @@ $fecha     = htmlspecialchars(substr($pedido['Fecha_ped'] ?? date('Y-m-d'), 0, 1
 $estadoVal = htmlspecialchars($pedido['Estado'] ?? 'pendiente');
 $descuento = (float)($pedido['Descuento'] ?? 0);
 
-// Construir filas iniciales del detalle con el mismo formato que registrar ($rowsData)
+/** Detalle inicial para pintar filas */
 $rowsData = [];
 if (!empty($pedido['detalles']) && is_array($pedido['detalles'])) {
     foreach ($pedido['detalles'] as $d) {
@@ -27,6 +27,27 @@ if (!empty($pedido['detalles']) && is_array($pedido['detalles'])) {
         ];
     }
 }
+
+/** Historial de abonos y total abonado */
+$abonosData = [];
+if (!empty($pedido['abonos']) && is_array($pedido['abonos'])) {
+    foreach ($pedido['abonos'] as $a) {
+        $abonosData[] = [
+            'ID_abono' => (int)($a['ID_abono'] ?? 0),
+            'fecha'    => $a['Fecha_abono'],
+            'monto'    => (float)$a['Monto_abono']
+        ];
+    }
+}
+$abonado = 0.0;
+if (!empty($pedido['abonos']) && is_array($pedido['abonos'])) {
+    foreach ($pedido['abonos'] as $ab) {
+        $abonado += (float)($ab['Monto_abono'] ?? 0);
+    }
+}
+
+$totalPedido = (float)($pedido['Total_ped'] ?? 0);
+$saldoDb = max($totalPedido - $abonado, 0);
 function h($s){ return htmlspecialchars((string)$s); }
 ?>
 <!DOCTYPE html>
@@ -41,7 +62,8 @@ function h($s){ return htmlspecialchars((string)$s); }
         .section-title{ color: var(--secondary); margin-bottom: 1rem; }
         .resumen-pedido{ background-color:#f8f9fa; }
         .resumen-pedido span{ font-size:.95rem; }
-        .tabla-detalle thead th{ background-color:#f0f0f0; }
+        .table-container{ overflow-x:auto; }
+        .sidebar .active{ font-weight:600; }
     </style>
 </head>
 <body>
@@ -80,7 +102,9 @@ function h($s){ return htmlspecialchars((string)$s); }
 
         <div class="card">
             <div class="card-body">
-                <form method="POST" action="<?= URL ?>pedido/editar">
+
+                <!-- ============ FORM EDITAR PEDIDO (CON ID) ============ -->
+                <form id="formEditarPedido" method="POST" action="<?= URL ?>pedido/editar">
                     <input type="hidden" name="ID_ped" value="<?= h($idPed) ?>">
 
                     <div class="row">
@@ -120,33 +144,28 @@ function h($s){ return htmlspecialchars((string)$s); }
                     </div>
 
                     <div class="row">
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Fecha</label>
-                                <input type="date" name="fecha" class="form-control" value="<?= $fecha ?>" required>
-                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" name="fecha" class="form-control" value="<?= $fecha ?>" required>
                         </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Estado</label>
-                                <select name="estado" class="form-select" required>
-                                    <?php foreach ($estados as $estado): ?>
-                                        <option value="<?= h($estado) ?>" <?= (strcasecmp($estado, $estadoVal)===0) ? 'selected' : '' ?>>
-                                            <?= h(ucwords($estado)) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Estado</label>
+                            <select name="estado" class="form-select" required>
+                                <?php foreach ($estados as $estado): ?>
+                                    <option value="<?= h($estado) ?>" <?= (strcasecmp($estado, $estadoVal)===0) ? 'selected' : '' ?>>
+                                        <?= h(ucwords($estado)) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Descuento (Q)</label>
-                                <input type="number" name="descuento" id="descuentoInput" class="form-control" min="0" step="0.01" value="<?= number_format($descuento,2,'.',''); ?>">
-                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Descuento (Q)</label>
+                            <input type="number" name="descuento" id="descuentoInput" class="form-control" min="0" step="0.01" value="<?= number_format($descuento,2,'.',''); ?>">
                         </div>
                     </div>
 
-                    <div class="form-section mb-4">
+                    <!-- Productos -->
+                    <div class="form-section my-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h5 class="section-title mb-0">
                                 <i class="fas fa-box-open fa-rosado"></i> Productos del pedido
@@ -157,7 +176,7 @@ function h($s){ return htmlspecialchars((string)$s); }
                         </div>
 
                         <div class="table-container">
-                        <table class="table table-bordered table-hover" id="productoTable">
+                            <table class="table table-bordered table-hover" id="productoTable">
                                 <thead>
                                     <tr>
                                         <th>Producto</th>
@@ -167,42 +186,122 @@ function h($s){ return htmlspecialchars((string)$s); }
                                         <th class="text-center" style="width:70px;">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody id="detallesBody"></tbody>
+                                <tbody id="productosBody"></tbody>
                             </table>
                         </div>
                     </div>
+                </form><!-- CIERRE DE PEDIDOS -->
 
-                    <div class="row justify-content-end">
-                        <div class="col-md-4">
-                            <div class="resumen-pedido border rounded p-3">
-                                <div class="d-flex justify-content-between">
-                                    <span>Subtotal:</span>
-                                    <span id="subtotal">Q0.00</span>
+                <!-- ============ ABONOS + RESUMEN (fuera del form grande) ============ -->
+                <div class="row g-4 align-items-start mt-2">
+
+                    <!-- IZQUIERDA: ABONOS -->
+                    <div class="col-lg-8">
+                        <div class="form-section">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="section-title mb-0">
+                                    <i class="fas fa-dollar-sign fa-rosado"></i> Abonos del pedido
+                                </h5>
+                            </div>
+
+                            <!-- Form independiente para nuevo abono -->
+                            <form action="<?= URL ?>pedido/abonar/<?= $idPed ?>" method="POST" class="mb-3">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-12 col-sm-5 col-md-4">
+                                        <label class="form-label">Fecha del abono</label>
+                                        <input type="date" name="fecha_abono" value="<?= date('Y-m-d') ?>" class="form-control" required>
+                                    </div>
+
+                                    <div class="col-12 col-sm-5 col-md-4">
+                                        <label class="form-label">Monto</label>
+                                        <input type="number" name="monto" step="0.01" min="0.01" max="<?= number_format($saldoDb, 2, '.', '') ?>"
+                                            class="form-control" placeholder="0.00" required>
+                                    </div>
+
+                                    <div class="col-12 col-sm col-md text-sm-end ms-sm-auto">
+                                        <button type="submit" class="btn btn-rosado px-4 w-100 w-sm-auto mt-2 mt-sm-0">
+                                            <i class="fas fa-plus"></i> Agregar abono
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="d-flex justify-content-between mt-2">
-                                    <span>Descuento:</span>
-                                    <span id="descuentoTotal">Q<?= number_format($descuento,2) ?></span>
-                                </div>
-                                <div class="d-flex justify-content-between mt-2">
-                                    <strong>Total:</strong>
-                                    <strong id="total">Q0.00</strong>
-                                </div>
+                            </form>
+
+                            <div class="table-container mt-2">
+                                <table class="table table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th hidden>ID</th>
+                                            <th style="width:160px;">Fecha</th>
+                                            <th class="text-end" style="width:160px;">Monto (Q)</th>
+                                            <th class="text-center" style="width:90px;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="abonosBody">
+                                        <?php if (!empty($abonosData)): ?>
+                                            <?php foreach ($abonosData as $ab): ?>
+                                                <tr>
+                                                    <td hidden><?= h($ab['ID_abono'] ?? '') ?></td>
+                                                    <td><?= h(substr($ab['fecha'],0,10)) ?></td>
+                                                    <td class="text-end">Q<?= number_format((float)$ab['monto'],2) ?></td>
+                                                    <td class="text-center">
+                                                        <a href="<?= URL ?>pedido/eliminarAbono/<?= (int)$ab['ID_abono'] ?>/<?= $idPed ?>"
+                                                           class="btn btn-outline-danger btn-sm"
+                                                           onclick="return confirm('¿Eliminar abono?');">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">No hay abonos registrados.</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-group text-end mt-4">
-                        <button type="submit" class="btn btn-rosado"><i class="fas fa-save"></i> Guardar Cambios</button>
-                        <a href="<?= URL ?>pedido/ver" class="btn btn-secondary"><i class="fas fa-times"></i> Cancelar</a>
+                    <!-- DERECHA: RESUMEN + BOTONES -->
+                    <div class="col-lg-4">
+                        <div class="resumen-pedido border rounded p-3 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Subtotal:</span>
+                                <span id="subtotal">Q0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <span>Descuento:</span>
+                                <span id="descuentoTotal">Q<?= number_format($descuento,2) ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <span>Abono:</span>
+                                <span id="abonoTotal">Q<?= number_format($abonado, 2) ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <strong>Saldo:</strong>
+                                <strong id="total">Q0.00</strong>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" form="formEditarPedido" class="btn btn-rosado">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                            <a href="<?= URL ?>pedido/ver" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
                     </div>
-                </form>
+                </div>
+                <!-- ============ FIN ABONOS/RESUMEN ============ -->
+
             </div>
         </div>
-
     </div>
 </div>
 
-<!-- Template de fila (como en registrar) -->
+<!-- Template de fila de producto -->
 <template id="producto-row-template">
     <tr>
         <td>
@@ -216,7 +315,7 @@ function h($s){ return htmlspecialchars((string)$s); }
             </select>
         </td>
         <td><input type="number" name="cantidad[]" class="form-control text-center cantidad-input" min="1" value="1" required></td>
-        <td><input type="number" name="precio[]"   class="form-control text-end precio-input"   min="0" step="0.01" value="0.00" required></td>
+        <td><input type="number" name="precio[]" class="form-control text-end precio-input" min="0" step="0.01" value="0.00" required></td>
         <td class="text-end subtotal-linea">Q0.00</td>
         <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm remove-row"><i class="fas fa-trash"></i></button></td>
     </tr>
@@ -227,98 +326,74 @@ document.addEventListener('DOMContentLoaded', function () {
     const empresaSelect = document.getElementById('empresaSelect');
     const clienteSelect = document.getElementById('clienteSelect');
     const noClientesAlert = document.getElementById('noClientesAlert');
+    const productosBody = document.getElementById('productosBody');
 
-    const detallesBody   = document.getElementById('detallesBody');
-    const template       = document.getElementById('producto-row-template');
-    const agregarBtn     = document.getElementById('agregarProducto');
+    const productoTemplate = document.getElementById('producto-row-template');
+    const agregarProductoBtn = document.getElementById('agregarProducto');
+
     const descuentoInput = document.getElementById('descuentoInput');
     const subtotalSpan   = document.getElementById('subtotal');
     const descuentoSpan  = document.getElementById('descuentoTotal');
     const totalSpan      = document.getElementById('total');
+    const abonoSpan      = document.getElementById('abonoTotal');
 
-    // Datos iniciales (del servidor)
-    const filasIniciales = <?= json_encode($rowsData, JSON_UNESCAPED_UNICODE); ?>;
-    const clientesIniciales = <?= json_encode($clientes, JSON_UNESCAPED_UNICODE); ?>;
+    const filasIniciales     = <?= json_encode($rowsData, JSON_UNESCAPED_UNICODE); ?>;
+    const clientesIniciales  = <?= json_encode($clientes, JSON_UNESCAPED_UNICODE); ?>;
+    const abonadoServidor    = parseFloat('<?= number_format($abonado, 2, ".", "") ?>') || 0;
     let clientePreseleccionado = "<?= $idCli ?>";
 
-    function mostrarMensajeSinClientes(mostrar) {
-        if (!noClientesAlert) return;
-        noClientesAlert.classList.toggle('d-none', !mostrar);
-    }
-
-    function limpiarClientes() {
-        clienteSelect.innerHTML = '<option value="">Seleccione un cliente</option>';
-        clienteSelect.disabled = true;
-    }
-
-    function renderClientes(clientes) {
+    function mostrarMensajeSinClientes(mostrar) { noClientesAlert?.classList.toggle('d-none', !mostrar); }
+    function limpiarClientes() { clienteSelect.innerHTML = '<option value="">Seleccione un cliente</option>'; clienteSelect.disabled = true; }
+    function renderClientes(list) {
         limpiarClientes();
-        if (!Array.isArray(clientes) || clientes.length === 0) {
-            mostrarMensajeSinClientes(Boolean(empresaSelect.value));
-            return;
-        }
-        clienteSelect.disabled = false;
-        mostrarMensajeSinClientes(false);
-
-        clientes.forEach(function (c) {
+        if (!Array.isArray(list) || list.length === 0) { mostrarMensajeSinClientes(Boolean(empresaSelect.value)); return; }
+        clienteSelect.disabled = false; mostrarMensajeSinClientes(false);
+        list.forEach(function (c) {
             const opt = document.createElement('option');
             opt.value = c.ID_cli;
             const nombre = [c.Nombre_cli || '', c.Apellido_cli || ''].join(' ').trim();
             opt.textContent = nombre || ('Cliente ' + c.ID_cli);
-            if (clientePreseleccionado && String(c.ID_cli) === String(clientePreseleccionado)) {
-                opt.selected = true;
-            }
+            if (clientePreseleccionado && String(c.ID_cli) === String(clientePreseleccionado)) opt.selected = true;
             clienteSelect.appendChild(opt);
         });
         clientePreseleccionado = '';
     }
-
     function cargarClientesPorEmpresa(empresaId) {
         if (!empresaId) { renderClientes([]); return; }
-        clienteSelect.innerHTML = '<option value="">Cargando...</option>';
-        clienteSelect.disabled = true;
+        clienteSelect.innerHTML = '<option value="">Cargando...</option>'; clienteSelect.disabled = true;
         fetch('<?= URL ?>pedido/clientesPorEmpresa/' + empresaId)
             .then(resp => resp.ok ? resp.json() : [])
             .then(data => renderClientes(Array.isArray(data) ? data : []))
             .catch(() => renderClientes([]));
     }
+    if (clientesIniciales && clientesIniciales.length) renderClientes(clientesIniciales);
+    else if (empresaSelect && empresaSelect.value) cargarClientesPorEmpresa(empresaSelect.value);
+    else renderClientes([]);
+    empresaSelect?.addEventListener('change', function () { clientePreseleccionado = ''; cargarClientesPorEmpresa(this.value); });
 
-    // Inicializar clientes (si ya vinieron filtrados)
-    if (clientesIniciales && clientesIniciales.length) {
-        renderClientes(clientesIniciales);
-    } else if (empresaSelect && empresaSelect.value) {
-        cargarClientesPorEmpresa(empresaSelect.value);
-    } else {
-        renderClientes([]);
-    }
-
-    // Cambio de empresa
-    if (empresaSelect) {
-        empresaSelect.addEventListener('change', function () {
-            clientePreseleccionado = '';
-            cargarClientesPorEmpresa(this.value);
-        });
-    }
-
-    // --- Detalle (igual que registrar)
     function actualizarTotales() {
         let subtotal = 0;
-        detallesBody.querySelectorAll('tr').forEach(function (row) {
-            const cantidad = parseFloat(row.querySelector('.cantidad-input').value) || 0;
-            const precio   = parseFloat(row.querySelector('.precio-input').value) || 0;
+        productosBody.querySelectorAll('tr').forEach(function (row) {
+            const cantidad = parseFloat(row.querySelector('.cantidad-input')?.value || 0);
+            const precio   = parseFloat(row.querySelector('.precio-input')?.value || 0);
             const subLinea = cantidad * precio;
-            row.querySelector('.subtotal-linea').textContent = 'Q' + subLinea.toFixed(2);
+            const celdaSub = row.querySelector('.subtotal-linea');
+            if (celdaSub) celdaSub.textContent = 'Q' + subLinea.toFixed(2);
             subtotal += subLinea;
         });
-        const desc = parseFloat(descuentoInput.value) || 0;
+        const desc  = parseFloat(descuentoInput?.value || 0);
         const total = Math.max(subtotal - desc, 0);
-        subtotalSpan.textContent = 'Q' + subtotal.toFixed(2);
+        const totalAbonos = abonadoServidor;
+        const saldo = Math.max(total - totalAbonos, 0);
+
+        subtotalSpan.textContent  = 'Q' + subtotal.toFixed(2);
         descuentoSpan.textContent = 'Q' + desc.toFixed(2);
-        totalSpan.textContent = 'Q' + total.toFixed(2);
+        abonoSpan.textContent     = 'Q' + totalAbonos.toFixed(2);
+        totalSpan.textContent     = 'Q' + saldo.toFixed(2);
     }
 
-    function enlazarEventos(row) {
-        const sel = row.querySelector('.producto-select');
+    function enlazarEventosProducto(row) {
+        const sel  = row.querySelector('.producto-select');
         const cant = row.querySelector('.cantidad-input');
         const pre  = row.querySelector('.precio-input');
         const del  = row.querySelector('.remove-row');
@@ -334,13 +409,13 @@ document.addEventListener('DOMContentLoaded', function () {
         pre.addEventListener('input', actualizarTotales);
         del.addEventListener('click', function () {
             row.remove();
-            if (!detallesBody.querySelector('tr')) agregarFila();
+            if (!productosBody.querySelector('tr')) agregarProductoFila();
             actualizarTotales();
         });
     }
 
-    function agregarFila(productoId = '', cantidad = 1, precio = '') {
-        const frag = template.content.cloneNode(true);
+    function agregarProductoFila(productoId = '', cantidad = 1, precio = '') {
+        const frag = productoTemplate.content.cloneNode(true);
         const row  = frag.querySelector('tr');
         const sel  = row.querySelector('.producto-select');
         const cant = row.querySelector('.cantidad-input');
@@ -354,28 +429,21 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             pre.value = parseFloat(precio).toFixed(2);
         }
-
-        detallesBody.appendChild(row);
-        enlazarEventos(row);
+        productosBody.appendChild(row);
+        enlazarEventosProducto(row);
         actualizarTotales();
     }
 
-    document.getElementById('agregarProducto').addEventListener('click', function(){
-        agregarFila();
-    });
+    agregarProductoBtn?.addEventListener('click', function(){ agregarProductoFila(); });
     descuentoInput.addEventListener('input', actualizarTotales);
 
-    // Pintar filas iniciales o una vacía
-    if (Array.isArray(filasIniciales) && filasIniciales.length) {
-        filasIniciales.forEach(f => agregarFila(f.producto_id, f.cantidad, f.precio));
-    } else {
-        agregarFila();
-    }
+    if (Array.isArray(filasIniciales) && filasIniciales.length) filasIniciales.forEach(f => agregarProductoFila(f.producto_id, f.cantidad, f.precio));
+    else agregarProductoFila();
 
-    // Recalcular al inicio
     actualizarTotales();
 });
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

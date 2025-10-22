@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-10-2025 a las 07:10:48
+-- Tiempo de generación: 22-10-2025 a las 07:05:12
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -83,6 +83,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarUsuario` (IN `p_id` INT, IN
     WHERE ID_us = p_id;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarAbono` (IN `p_id` INT)   BEGIN
+    DELETE FROM abono WHERE ID_abono = p_id;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarCliente` (IN `p_id` INT)   BEGIN
     DELETE FROM cliente WHERE ID_cli = p_id;
 END$$
@@ -109,6 +113,11 @@ END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spEliminarUsuario` (IN `p_id` INT)   BEGIN
     DELETE FROM usuario WHERE ID_us = p_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarAbono` (IN `p_id_ped` INT, IN `p_fecha` DATE, IN `p_monto` DECIMAL(10,2))   BEGIN
+    INSERT INTO abono (ID_ped, Fecha_abono, Monto_abono)
+    VALUES (p_id_ped, p_fecha, p_monto);
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spInsertarCliente` (IN `p_ID_emp` INT, IN `p_Nombre_cli` VARCHAR(150), IN `p_Apellido_cli` VARCHAR(150), IN `p_Telefono_cli` VARCHAR(11), IN `p_Direccion_cli` VARCHAR(200), IN `p_Correo_cli` VARCHAR(150))   BEGIN
@@ -231,11 +240,34 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerProductoPorID` (IN `p_id` 
     LIMIT 1;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerResumenPago` (IN `p_id` INT)   BEGIN
+	SELECT 
+		p.Total_ped,
+        IFNULL((
+			SELECT SUM(a.Monto_abono)
+            FROM abono a
+            WHERE a.ID_ped = p.ID_ped
+		), 0) AS total_abonado
+	FROM pedido p
+    WHERE p.ID_ped = p.id
+	LIMIT 1;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spObtenerUsuarioPorID` (IN `p_id` INT)   BEGIN
     SELECT ID_us, usuario, Rol_us, Estado_us, Fecha_Creacion
     FROM usuario
     WHERE ID_us = p_id
     LIMIT 1;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerAbonosPorPedido` (IN `p_id_ped` INT)   BEGIN
+    SELECT 
+        ID_abono,
+        Fecha_abono,
+        Monto_abono
+    FROM abono
+    WHERE ID_ped = p_id_ped
+    ORDER BY Fecha_abono ASC;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerClientes` ()   BEGIN
@@ -272,19 +304,27 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerificarUsuario` (IN `p_usuario`
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerPedidos` ()   BEGIN
-	SELECT p.ID_ped,
-           CONCAT(COALESCE(c.Nombre_cli, ''), ' ', COALESCE(c.Apellido_cli, '')) AS Cliente,
-           c.Correo_cli,
-           c.Telefono_cli,
-           p.Fecha_ped,
-           u.usuario AS Usuario,
-           p.Estado,
-           p.Descuento,
-           p.Total_ped
-    FROM pedido p
-    LEFT JOIN cliente c ON p.ID_cli = c.ID_cli
-    LEFT JOIN usuario u ON p.ID_us = u.ID_us
-    ORDER BY p.ID_ped DESC;
+	SELECT
+		p.ID_ped,
+		CONCAT(COALESCE(c.Nombre_cli,''),' ',COALESCE(c.Apellido_cli,'')) AS Cliente,
+		c.Correo_cli,
+		c.Telefono_cli,
+		p.Fecha_ped,
+		u.usuario AS Usuario,
+		p.Estado,
+		p.Descuento,
+		p.Total_ped,
+		IFNULL(ab.suma_abonos,0) AS Abono,
+		GREATEST(p.Total_ped - IFNULL(ab.suma_abonos,0), 0) AS Saldo
+	FROM pedido p
+	LEFT JOIN cliente c ON p.ID_cli = c.ID_cli
+	LEFT JOIN usuario u ON p.ID_us = u.ID_us
+	LEFT JOIN (
+		SELECT ID_ped, SUM(Monto_abono) AS suma_abonos
+		FROM abono
+		GROUP BY ID_ped
+	) ab ON ab.ID_ped = p.ID_ped
+	ORDER BY p.ID_ped DESC;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerProductos` ()   BEGIN
@@ -311,9 +351,18 @@ CREATE TABLE `abono` (
   `ID_abono` int(11) NOT NULL,
   `ID_ped` int(11) DEFAULT NULL,
   `Fecha_abono` date DEFAULT NULL,
-  `Monto_abono` decimal(10,2) DEFAULT NULL,
-  `Total_Neto` decimal(10,2) DEFAULT NULL
+  `Monto_abono` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `abono`
+--
+
+INSERT INTO `abono` (`ID_abono`, `ID_ped`, `Fecha_abono`, `Monto_abono`) VALUES
+(4, 1, '2025-10-20', 100.00),
+(5, 1, '2025-10-20', 20.00),
+(7, 3, '2025-10-22', 10.00),
+(10, 3, '2025-10-22', 50.00);
 
 -- --------------------------------------------------------
 
@@ -358,7 +407,10 @@ CREATE TABLE `detalle_pedido` (
 --
 
 INSERT INTO `detalle_pedido` (`ID_det`, `ID_ped`, `ID_pro`, `Cantidad_det`, `PrecioUnitario_det`) VALUES
-(6, 1, 2, 2, 75.00);
+(18, 2, 2, 10, 75.00),
+(34, 3, 4, 1, 60.00),
+(35, 3, 2, 1, 75.00),
+(36, 1, 2, 2, 75.00);
 
 -- --------------------------------------------------------
 
@@ -407,7 +459,9 @@ CREATE TABLE `pedido` (
 --
 
 INSERT INTO `pedido` (`ID_ped`, `ID_cli`, `ID_us`, `Fecha_ped`, `Descuento`, `Total_ped`, `Estado`) VALUES
-(1, 8, 2, '2025-09-29', 5.00, 145.00, 'pendiente');
+(1, 8, 2, '2025-09-29', 10.00, 140.00, 'en proceso'),
+(2, 3, 2, '2025-10-18', 100.00, 650.00, 'pendiente'),
+(3, 8, 2, '2025-10-20', 30.00, 105.00, 'en proceso');
 
 -- --------------------------------------------------------
 
@@ -427,7 +481,8 @@ CREATE TABLE `producto` (
 --
 
 INSERT INTO `producto` (`ID_pro`, `Nombre_pro`, `Descripcion_pro`, `Precio_pro`) VALUES
-(2, 'Polo Sincatex', 'Camisa tipo polo en tela sincatex', 75.00);
+(2, 'Polo Sincatex', 'Camisa tipo polo en tela sincatex', 75.00),
+(4, 'Chaleco', 'Chaleco de tela', 60.00);
 
 -- --------------------------------------------------------
 
@@ -519,7 +574,7 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `abono`
 --
 ALTER TABLE `abono`
-  MODIFY `ID_abono` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID_abono` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `cliente`
@@ -531,7 +586,7 @@ ALTER TABLE `cliente`
 -- AUTO_INCREMENT de la tabla `detalle_pedido`
 --
 ALTER TABLE `detalle_pedido`
-  MODIFY `ID_det` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `ID_det` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT de la tabla `empresa`
@@ -543,13 +598,13 @@ ALTER TABLE `empresa`
 -- AUTO_INCREMENT de la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  MODIFY `ID_ped` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `ID_ped` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `producto`
 --
 ALTER TABLE `producto`
-  MODIFY `ID_pro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `ID_pro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`

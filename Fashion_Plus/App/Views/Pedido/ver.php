@@ -17,6 +17,24 @@ function estadoBadgeClass($estado) {
         default:           return 'bg-secondary';
     }
 }
+
+/** Historial de abonos y total abonado */
+$abonosData = [];
+if (!empty($pedido['abonos']) && is_array($pedido['abonos'])) {
+    foreach ($pedido['abonos'] as $a) {
+        $abonosData[] = [
+            'ID_abono' => (int)($a['ID_abono'] ?? 0),
+            'fecha'    => $a['Fecha_abono'],
+            'monto'    => (float)$a['Monto_abono']
+        ];
+    }
+}
+$abonado = 0.0;
+if (!empty($pedido['abonos']) && is_array($pedido['abonos'])) {
+    foreach ($pedido['abonos'] as $ab) {
+        $abonado += (float)($ab['Monto_abono'] ?? 0);
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -77,12 +95,13 @@ function estadoBadgeClass($estado) {
                         <table class="table table-bordered table-hover" id="pedidoTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th hidden>ID</th>
                                     <th>Cliente</th>
                                     <th>Fecha</th>
                                     <th>Vendedor</th>
                                     <th>Estado</th>
                                     <th>Total</th>
+                                    <th>Saldo Pendiente</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
@@ -90,7 +109,7 @@ function estadoBadgeClass($estado) {
                                 <?php foreach ($pedidos as $pedido): ?>
                                     <?php $collapseId = 'pedido-' . $pedido['ID_ped']; ?>
                                     <tr class="pedido-row">
-                                        <td><?= (int)$pedido['ID_ped']; ?></td>
+                                        <td hidden><?= (int)$pedido['ID_ped']; ?></td>
                                         <td>
                                             <strong><?= htmlspecialchars(trim($pedido['Cliente'])) ?: 'Sin cliente asignado'; ?></strong><br>
                                             <?php if (!empty($pedido['Correo_cli'])): ?>
@@ -114,16 +133,14 @@ function estadoBadgeClass($estado) {
                                             </span>
                                         </td>
                                         <td class="pedido-total">Q<?= number_format((float)($pedido['Total_ped'] ?? 0), 2); ?></td>
+                                        <td class="pedido-saldo">Q<?= number_format((float)($pedido['Saldo'] ?? 0), 2); ?></td>
                                         <td class="text-center">
                                             <div class="btn-group" role="group">
-                                                <button class="btn btn-sm btn-outline-primary" type="button"
-                                                        data-bs-toggle="collapse" data-bs-target="#<?= $collapseId; ?>"
-                                                        aria-expanded="false" aria-controls="<?= $collapseId; ?>"
-                                                        title="Ver detalle rápido">
+                                                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#<?= $collapseId; ?>" aria-expanded="false" aria-controls="<?= $collapseId; ?>" 
+                                                    title="Ver detalle rápido">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <a href="<?= URL ?>pedido/editar/<?= (int)$pedido['ID_ped']; ?>"
-                                                   class="btn btn-sm btn-outline-warning" title="Editar pedido">
+                                                <a href="<?= URL ?>pedido/editar/<?= (int)$pedido['ID_ped']; ?>" class="btn btn-sm btn-outline-warning" title="Editar pedido">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                             </div>
@@ -172,7 +189,8 @@ function estadoBadgeClass($estado) {
                                                             <div class="pedido-desglose">
                                                                 <span><strong>Subtotal:</strong> Q<?= number_format($subtotal, 2); ?></span>
                                                                 <span><strong>Descuento:</strong> Q<?= number_format((float)($pedido['Descuento'] ?? 0), 2); ?></span>
-                                                                <span><strong>Total:</strong> Q<?= number_format((float)($pedido['Total_ped'] ?? 0), 2); ?></span>
+                                                                <span><strong>Abono:</strong> Q<?= number_format((float)($datos['abonado'] ?? 0), 2) ?></span>
+                                                                <!-- <span><strong>Total:</strong> Q<?= number_format((float)($pedido['Total_ped'] ?? 0), 2); ?></span> -->
                                                             </div>
                                                         </div>
                                                     </div>

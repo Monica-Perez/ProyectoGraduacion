@@ -24,7 +24,7 @@ class Pedido {
         }
     }
 
-    /** OBTENER ENCABEZADO + DETALLE POR ID */
+    /* OBTENER ENCABEZADO */
     public function obtenerPedidoPorId($id) {
         try {
             $stmt = $this->db->prepare("CALL spObtenerPedidoPorID(?)");
@@ -35,6 +35,9 @@ class Pedido {
 
             if ($pedido) {
                 $pedido['detalles'] = $this->obtenerDetallesPedido($pedido['ID_ped']);
+                if (method_exists($this, 'obtenerAbonos')) {
+                    $pedido['abonos'] = $this->obtenerAbonos($pedido['ID_ped']);
+            }
             }
             return $pedido ?: null;
         } catch (PDOException $e) {
@@ -43,7 +46,7 @@ class Pedido {
         }
     }
 
-    /** INSERTAR PEDIDO (ENCABEZADO + DETALLE) */
+    /* INSERTAR PEDIDO */
     public function insertar($datosPedido, $detalles) {
         try {
             $this->db->beginTransaction();
@@ -90,17 +93,6 @@ class Pedido {
                 $detalleStmt->closeCursor();
             }
 
-            // (Opcional) Recalcular totales en BD
-            try {
-                $recalc = $this->db->prepare("CALL spRecalcularTotalesPedido(?)");
-                $recalc->bindParam(1, $pedidoId, PDO::PARAM_INT);
-                $recalc->execute();
-                $recalc->closeCursor();
-            } catch (PDOException $e) {
-                // Si no existe el SP, ignoramos y seguimos (ya calculaste en PHP)
-                error_log("Aviso: spRecalcularTotalesPedido no disponible o falló en insertar(): ".$e->getMessage());
-            }
-
             $this->db->commit();
             return $pedidoId;
         } catch (Throwable $e) {
@@ -124,7 +116,6 @@ class Pedido {
             return [];
         }
     }
-
 
     public function editar($id, $datos)
     {
@@ -200,6 +191,82 @@ class Pedido {
             if ($this->db->inTransaction()) $this->db->rollBack();
             error_log("Error al eliminar pedido: " . $e->getMessage());
             return false;
+        }
+    }
+
+    /** OBTENER HISTÓRICO DE ABONOS DE UN PEDIDO */
+    public function obtenerAbonos($idPedido) {
+        try {
+            $stmt = $this->db->prepare("CALL spVerAbonosPorPedido(?)");
+            $stmt->execute([$idPedido]);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            return $data;
+        } catch (PDOException $e) {
+            error_log("Error al obtener abonos: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /** REGISTRAR NUEVO ABONO */
+    public function registrarAbono($idPedido, $fecha, $monto) {
+        try {
+            $this->db->beginTransaction();
+
+            // Insertar nuevo abono
+            $stmt = $this->db->prepare("CALL spInsertarAbono(?, ?, ?)");
+            $stmt->execute([$idPedido, $fecha, $monto]);
+            $stmt->closeCursor();
+
+            // Verificar total abonado *************
+            $stmt = $this->db->prepare("
+                SELECT SUM(Monto_abono) AS total_abonado, p.Total_ped
+                FROM abono a
+                JOIN pedido p ON p.ID_ped = a.ID_ped
+                WHERE a.ID_ped = ?
+                GROUP BY p.Total_ped
+            ");
+            $stmt->execute([$idPedido]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+
+            if ($data && $data['total_abonado'] >= ($data['Total_ped'] * 0.5)) {
+                $stmt = $this->db->prepare("UPDATE pedido SET Estado = 'en proceso' WHERE ID_ped = ?");
+                $stmt->execute([$idPedido]);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Throwable $e) {
+            $this->db->rollBack();
+            error_log("Error al registrar abono: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function eliminarAbono($idAbono) {
+        try {
+            $stmt = $this->db->prepare("CALL spEliminarAbono(?)");
+            $stmt->execute([$idAbono]);
+            $stmt->closeCursor();
+
+            return true;
+        } catch (Throwable $e) {
+            error_log("Error al eliminar abono: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function obtenerResumenPago($idPedido) {
+        try {
+            $stmt = $this->db->prepare("CALL spObtenerResumenPago(?)");
+            $stmt->execute([$idPedido]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            return $row ?: ['Total_ped' => 0, 'total_abonado' => 0];
+        } catch (PDOException $e) {
+            error_log("Error obtenerResumenPago: " . $e->getMessage());
+            return ['Total_ped' => 0, 'total_abonado' => 0];
         }
     }
 

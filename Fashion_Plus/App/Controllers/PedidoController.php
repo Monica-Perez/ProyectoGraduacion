@@ -28,7 +28,8 @@ class PedidoController extends Controller {
         $empresaModel  = $this->model('Empresa');
         $productoModel = $this->model('Producto');
         $pedidoModel   = $this->model('Pedido');
-
+        
+        $clientes = $clienteModel->ver();
         $empresas = $empresaModel->ver();
         $productos = $productoModel->ver();
 
@@ -101,6 +102,22 @@ class PedidoController extends Controller {
         }
     }
 
+    // API: CLIENTES POR EMPRESA (para selects dependientes)
+    public function clientesPorEmpresa($empresaId = null) {
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!$empresaId) {
+            echo json_encode([]);
+            exit;
+        }
+
+        $clienteModel = $this->model('Cliente');
+        $clientes = $clienteModel->obtenerClientesPorEmpresa((int) $empresaId);
+
+        echo json_encode($clientes, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     /** EDITAR PEDIDO */
     public function editar($id = null) {
         $pedidoModel   = $this->model('Pedido');
@@ -150,9 +167,14 @@ class PedidoController extends Controller {
             } catch (Exception $e) {
                 $pedido = $pedidoModel->obtenerPedidoPorId($id);
                 $empresas = $empresaModel->ver();
+                $idEmpresa = (int)($pedido['ID_emp'] ?? 0);
                 $clientes = $idEmpresa ? $clienteModel->obtenerClientesPorEmpresa($idEmpresa) : [];
                 $productos = $productoModel->ver();
-
+                
+                // 🔹 Cargar abonos del pedido para la vista
+                if (method_exists($pedidoModel, 'obtenerAbonos')) {
+                    $pedido['abonos'] = $pedidoModel->obtenerAbonos((int)$id);
+                }
                 $this->view('pedido/editar', [
                     'pedido' => $pedido,
                     'empresas' => $empresas,
@@ -162,6 +184,7 @@ class PedidoController extends Controller {
                     'error' => 'Error al editar pedido: ' . $e->getMessage()
                 ]);
             }
+            
         } else {
             if (!$id) {
                 header('Location: ' . URL . 'pedido/ver');
@@ -198,6 +221,82 @@ class PedidoController extends Controller {
         }
 
         header('Location: ' . URL . 'pedido/ver');
+        exit;
+    }
+
+    public function abonar($idPedido = null) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!$idPedido) {
+                header('Location: ' . URL . 'pedido/ver');
+                exit;
+            }
+
+            $monto = isset($_POST['monto']) ? (float)$_POST['monto'] : 0;
+            $fecha = $_POST['fecha_abono'] ?? date('Y-m-d');
+
+            $pedidoModel   = $this->model('Pedido');
+            $clienteModel  = $this->model('Cliente');
+            $empresaModel  = $this->model('Empresa');
+            $productoModel = $this->model('Producto');
+
+            // Intentar guardar
+            $exito = false;
+            try {
+                $exito = $pedidoModel->registrarAbono($idPedido, $fecha, $monto);
+            } catch (Exception $e) {
+                // opcional: log
+            }
+
+            if ($exito) {
+                // éxito -> redirige, como en tus otros controladores
+                header('Location: ' . URL . 'pedido/editar/' . $idPedido);
+                exit;
+            } else {
+                // fallo -> volver a pintar la vista de editar con 'error'
+                $pedido    = $pedidoModel->obtenerPedidoPorId($idPedido);
+                $empresas  = $empresaModel->ver();
+                $idEmpresa = (int)($pedido['ID_emp'] ?? 0);
+                $clientes  = $idEmpresa ? $clienteModel->obtenerClientesPorEmpresa($idEmpresa) : [];
+                $productos = $productoModel->ver();
+
+                // si ya tienes obtenerAbonos en el modelo, pásalos; si no, omite esta línea
+                if (method_exists($pedidoModel, 'obtenerAbonos')) {
+                    $pedido['abonos'] = $pedidoModel->obtenerAbonos($idPedido);
+                }
+
+                $this->view('pedido/editar', [
+                    'pedido'    => $pedido,
+                    'empresas'  => $empresas,
+                    'clientes'  => $clientes,
+                    'productos' => $productos,
+                    'estados'   => $this->estadosPermitidos,
+                    'error'     => 'Error al registrar abono'
+                ]);
+            }
+        } else {
+            header('Location: ' . URL . 'pedido/ver');
+            exit;
+        }
+    }
+
+    public function eliminarAbono($idAbono = null, $idPedido = null) {
+        if (!isset($_SESSION)) session_start();
+        if (!isset($_SESSION['usuario'])) {
+            header('Location: ' . URL . 'usuario/login');
+            exit;
+        }
+
+        if ($idAbono) {
+            $pedidoModel = $this->model('Pedido');
+            try {
+                $pedidoModel->eliminarAbono((int)$idAbono);
+            } catch (Exception $e) {
+                // opcional: log o pasar un mensaje en sesión
+            }
+        }
+
+        $idPedido = (int)($idPedido ?: 0);
+        header('Location: ' . URL . 'pedido/editar/' . $idPedido);
         exit;
     }
 
