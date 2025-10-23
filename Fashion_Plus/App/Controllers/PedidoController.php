@@ -23,84 +23,211 @@ class PedidoController extends Controller {
     }
 
     /** REGISTRAR PEDIDO */
-    public function registrar() {
-        $clienteModel  = $this->model('Cliente');
-        $empresaModel  = $this->model('Empresa');
-        $productoModel = $this->model('Producto');
-        $pedidoModel   = $this->model('Pedido');
+    // public function registrar() {
+    //     $clienteModel  = $this->model('Cliente');
+    //     $empresaModel  = $this->model('Empresa');
+    //     $productoModel = $this->model('Producto');
+    //     $pedidoModel   = $this->model('Pedido');
         
-        $clientes = $clienteModel->ver();
-        $empresas = $empresaModel->ver();
-        $productos = $productoModel->ver();
+    //     $clientes = $clienteModel->ver();
+    //     $empresas = $empresaModel->ver();
+    //     $productos = $productoModel->ver();
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $idEmpresa = $_POST['ID_emp'] ?? '';
-            $idCliente = $_POST['ID_cli'] ?? '';
-            $fecha     = $_POST['fecha'] ?? date('Y-m-d');
-            $estado    = $_POST['estado'] ?? 'pendiente';
-            $descuento = isset($_POST['descuento']) ? (float)$_POST['descuento'] : 0;
+    //     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $idEmpresa = $_POST['ID_emp'] ?? '';
+    //         $idCliente = $_POST['ID_cli'] ?? '';
+    //         $fecha     = $_POST['fecha'] ?? date('Y-m-d');
+    //         $estado    = $_POST['estado'] ?? 'pendiente';
+    //         $descuento = isset($_POST['descuento']) ? (float)$_POST['descuento'] : 0;
 
-            $productosSeleccionados = $_POST['producto_id'] ?? [];
-            $cantidades = $_POST['cantidad'] ?? [];
-            $precios = $_POST['precio'] ?? [];
+    //         $productosSeleccionados = $_POST['producto_id'] ?? [];
+    //         $cantidades = $_POST['cantidad'] ?? [];
+    //         $precios = $_POST['precio'] ?? [];
 
-            // Construir detalle
-            $detalles = [];
-            $subtotal = 0;
-            for ($i = 0; $i < count($productosSeleccionados); $i++) {
-                $idPro  = (int)$productosSeleccionados[$i];
-                $cant   = (float)($cantidades[$i] ?? 0);
-                $precio = (float)($precios[$i] ?? 0);
-                if ($idPro > 0 && $cant > 0) {
-                    $detalles[] = ['ID_pro' => $idPro, 'Cantidad' => $cant, 'Precio' => $precio];
-                    $subtotal += $cant * $precio;
-                }
+    //         // Construir detalle
+    //         $detalles = [];
+    //         $subtotal = 0;
+    //         for ($i = 0; $i < count($productosSeleccionados); $i++) {
+    //             $idPro  = (int)$productosSeleccionados[$i];
+    //             $cant   = (float)($cantidades[$i] ?? 0);
+    //             $precio = (float)($precios[$i] ?? 0);
+    //             if ($idPro > 0 && $cant > 0) {
+    //                 $detalles[] = ['ID_pro' => $idPro, 'Cantidad' => $cant, 'Precio' => $precio];
+    //                 $subtotal += $cant * $precio;
+    //             }
+    //         }
+    //         $total = max($subtotal - $descuento, 0);
+
+    //         $datosPedido = [
+    //             'ID_cli'     => $idCliente,
+    //             'ID_us'      => $_SESSION['usuario']['ID_us'] ?? null,
+    //             'Fecha_ped'  => $fecha,
+    //             'Descuento'  => $descuento,
+    //             'Total_ped'  => $total,
+    //             'Estado'     => $estado
+    //         ];
+
+    //         try {
+    //             $exito = $pedidoModel->insertar($datosPedido, $detalles);
+    //             if ($exito) {
+    //                 header('Location: ' . URL . 'pedido/ver');
+    //                 exit;
+    //             } else {
+    //                 $clientes = $idEmpresa ? $clienteModel->obtenerClientesPorEmpresa($idEmpresa) : [];
+    //                 $this->view('pedido/registrar', [
+    //                     'error' => 'Error al registrar pedido',
+    //                     'empresas' => $empresas,
+    //                     'clientes' => $clientes,
+    //                     'productos' => $productos,
+    //                     'estados' => $this->estadosPermitidos
+    //                 ]);
+    //             }
+    //         } catch (Exception $e) {
+    //             $clientes = $idEmpresa ? $clienteModel->obtenerClientesPorEmpresa($idEmpresa) : [];
+    //             $this->view('pedido/registrar', [
+    //                 'error' => 'Error al registrar pedido: ' . $e->getMessage(),
+    //                 'empresas' => $empresas,
+    //                 'clientes' => $clientes,
+    //                 'productos' => $productos,
+    //                 'estados' => $this->estadosPermitidos
+    //             ]);
+    //         }
+    //     } else {
+    //         $this->view('pedido/registrar', [
+    //             'empresas' => $empresas,
+    //             'clientes' => [],
+    //             'productos' => $productos,
+    //             'estados' => $this->estadosPermitidos
+    //         ]);
+    //     }
+    // }
+
+    /** REGISTRAR PEDIDO (GET/POST, con abonos) */
+public function registrar() {
+    $pedidoModel   = $this->model('Pedido');
+    $clienteModel  = $this->model('Cliente');
+    $empresaModel  = $this->model('Empresa');
+    $productoModel = $this->model('Producto');
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $idEmpresa = $_POST['ID_emp'] ?? '';
+        $idCliente = $_POST['ID_cli'] ?? '';
+        $fecha     = $_POST['fecha'] ?? date('Y-m-d');
+        $estado    = $_POST['estado'] ?? 'pendiente';
+        $descuento = isset($_POST['descuento']) ? (float)$_POST['descuento'] : 0;
+
+        // Detalle (mismo patrón que en editar, pero el modelo insertar() espera 'Cantidad' y 'Precio' capitalizados)
+        $productosSeleccionados = $_POST['producto_id'] ?? [];
+        $cantidades             = $_POST['cantidad'] ?? [];
+        $precios                = $_POST['precio'] ?? [];
+
+        $detalles = [];
+        $subtotal = 0;
+        for ($i = 0; $i < count($productosSeleccionados); $i++) {
+            $idPro  = (int)$productosSeleccionados[$i];
+            $cant   = (float)($cantidades[$i] ?? 0);
+            $precio = (float)($precios[$i] ?? 0);
+            if ($idPro > 0 && $cant > 0) {
+                $detalles[] = ['ID_pro' => $idPro, 'Cantidad' => $cant, 'Precio' => $precio];
+                $subtotal  += $cant * $precio;
             }
-            $total = max($subtotal - $descuento, 0);
+        }
+        $total = max($subtotal - $descuento, 0);
 
-            $datosPedido = [
-                'ID_cli'     => $idCliente,
-                'ID_us'      => $_SESSION['usuario']['ID_us'] ?? null,
-                'Fecha_ped'  => $fecha,
-                'Descuento'  => $descuento,
-                'Total_ped'  => $total,
-                'Estado'     => $estado
-            ];
+        // Abonos (opcionales) – mismos nombres que usarás en la vista registrar
+        $fechasAbono = $_POST['fecha_abono'] ?? [];
+        $montosAbono = $_POST['monto_abono'] ?? [];
+        $abonos = [];
+        $nAb = min(count($fechasAbono), count($montosAbono));
+        for ($i = 0; $i < $nAb; $i++) {
+            $monto = (float)$montosAbono[$i];
+            $fechaAb = $fechasAbono[$i] ?: $fecha;
+            if ($monto > 0) {
+                $abonos[] = ['fecha' => $fechaAb, 'monto' => $monto];
+            }
+        }
 
-            try {
-                $exito = $pedidoModel->insertar($datosPedido, $detalles);
-                if ($exito) {
-                    header('Location: ' . URL . 'pedido/ver');
-                    exit;
-                } else {
-                    $clientes = $idEmpresa ? $clienteModel->obtenerClientesPorEmpresa($idEmpresa) : [];
-                    $this->view('pedido/registrar', [
-                        'error' => 'Error al registrar pedido',
-                        'empresas' => $empresas,
-                        'clientes' => $clientes,
-                        'productos' => $productos,
-                        'estados' => $this->estadosPermitidos
-                    ]);
+        // Regla: no permitir saldo negativo
+        $totalAbonos = array_sum(array_column($abonos, 'monto'));
+        if ($totalAbonos > $total) {
+            $empresas  = $empresaModel->ver();
+            $clientes  = $idEmpresa ? $clienteModel->obtenerClientesPorEmpresa((int)$idEmpresa) : [];
+            $productos = $productoModel->ver();
+
+            $this->view('pedido/registrar', [
+                'empresas'  => $empresas,
+                'clientes'  => $clientes,
+                'productos' => $productos,
+                'estados'   => $this->estadosPermitidos,
+                'error'     => 'La suma de abonos no puede exceder el total del pedido.',
+                'form'      => $_POST
+            ]);
+            return;
+        }
+
+        // Encabezado para insertar
+        $datosPedido = [
+            'ID_cli'     => $idCliente,
+            'ID_us'      => $_SESSION['usuario']['ID_us'] ?? null,
+            'Fecha_ped'  => $fecha,
+            'Descuento'  => $descuento,
+            'Total_ped'  => $total,
+            'Estado'     => $estado
+        ];
+
+        try {
+            $idNuevo = $pedidoModel->insertar($datosPedido, $detalles);
+            if ($idNuevo) {
+                // Registrar abonos (si los hay)
+                foreach ($abonos as $ab) {
+                    if ($ab['monto'] > 0) {
+                        $pedidoModel->registrarAbono($idNuevo, $ab['fecha'], $ab['monto']);
+                    }
                 }
-            } catch (Exception $e) {
-                $clientes = $idEmpresa ? $clienteModel->obtenerClientesPorEmpresa($idEmpresa) : [];
+                header('Location: ' . URL . 'pedido/ver');
+                exit;
+            } else {
+                $empresas  = $empresaModel->ver();
+                $clientes  = $idEmpresa ? $clienteModel->obtenerClientesPorEmpresa((int)$idEmpresa) : [];
+                $productos = $productoModel->ver();
+
                 $this->view('pedido/registrar', [
-                    'error' => 'Error al registrar pedido: ' . $e->getMessage(),
-                    'empresas' => $empresas,
-                    'clientes' => $clientes,
+                    'error'     => 'Error al registrar pedido',
+                    'empresas'  => $empresas,
+                    'clientes'  => $clientes,
                     'productos' => $productos,
-                    'estados' => $this->estadosPermitidos
+                    'estados'   => $this->estadosPermitidos,
+                    'form'      => $_POST
                 ]);
             }
-        } else {
+        } catch (Exception $e) {
+            $empresas  = $empresaModel->ver();
+            $clientes  = $idEmpresa ? $clienteModel->obtenerClientesPorEmpresa((int)$idEmpresa) : [];
+            $productos = $productoModel->ver();
+
             $this->view('pedido/registrar', [
-                'empresas' => $empresas,
-                'clientes' => [],
+                'error'     => 'Error al registrar pedido: ' . $e->getMessage(),
+                'empresas'  => $empresas,
+                'clientes'  => $clientes,
                 'productos' => $productos,
-                'estados' => $this->estadosPermitidos
+                'estados'   => $this->estadosPermitidos,
+                'form'      => $_POST
             ]);
         }
+    } else {
+        // GET
+        $empresas  = $empresaModel->ver();
+        $productos = $productoModel->ver();
+
+        $this->view('pedido/registrar', [
+            'empresas'  => $empresas,
+            'clientes'  => [], 
+            'productos' => $productos,
+            'estados'   => $this->estadosPermitidos
+        ]);
     }
+}
+
 
     // API: CLIENTES POR EMPRESA (para selects dependientes)
     public function clientesPorEmpresa($empresaId = null) {

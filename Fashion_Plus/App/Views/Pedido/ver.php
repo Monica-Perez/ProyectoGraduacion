@@ -17,24 +17,6 @@ function estadoBadgeClass($estado) {
         default:           return 'bg-secondary';
     }
 }
-
-/** Historial de abonos y total abonado */
-$abonosData = [];
-if (!empty($pedido['abonos']) && is_array($pedido['abonos'])) {
-    foreach ($pedido['abonos'] as $a) {
-        $abonosData[] = [
-            'ID_abono' => (int)($a['ID_abono'] ?? 0),
-            'fecha'    => $a['Fecha_abono'],
-            'monto'    => (float)$a['Monto_abono']
-        ];
-    }
-}
-$abonado = 0.0;
-if (!empty($pedido['abonos']) && is_array($pedido['abonos'])) {
-    foreach ($pedido['abonos'] as $ab) {
-        $abonado += (float)($ab['Monto_abono'] ?? 0);
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -184,16 +166,20 @@ if (!empty($pedido['abonos']) && is_array($pedido['abonos'])) {
                                                     <?php else: ?>
                                                         <div class="alert alert-light border mb-0">No se registraron productos en este pedido.</div>
                                                     <?php endif; ?>
+                                                    
                                                     <div class="row justify-content-end mt-3">
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <div class="pedido-desglose">
                                                                 <span><strong>Subtotal:</strong> Q<?= number_format($subtotal, 2); ?></span>
-                                                                <span><strong>Descuento:</strong> Q<?= number_format((float)($pedido['Descuento'] ?? 0), 2); ?></span>
-                                                                <span><strong>Abono:</strong> Q<?= number_format((float)($datos['abonado'] ?? 0), 2) ?></span>
-                                                                <!-- <span><strong>Total:</strong> Q<?= number_format((float)($pedido['Total_ped'] ?? 0), 2); ?></span> -->
+                                                                <span><strong> Descuento:</strong> Q<?= number_format((float)($pedido['Descuento'] ?? 0), 2); ?></span>
+                                                                <span><strong> Abono:</strong> Q<?= number_format((float)($pedido['Abono'] ?? 0), 2); ?></span>
+                                                                <span><strong> Total:</strong> Q<?= number_format((float)($pedido['Total_ped'] ?? 0), 2); ?></span>
+                                                                <!-- <span><strong> Saldo Pendiente:</strong> Q<?= number_format((float)($pedido['Saldo'] ?? 0), 2); ?></span> -->
+                                                                
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    
                                                 </div>
                                             </div>
                                         </td>

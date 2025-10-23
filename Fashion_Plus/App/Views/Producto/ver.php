@@ -73,7 +73,7 @@ $productos = $datos['productos'];
                         <table class="table table-bordered table-hover" id="productoTable">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th>ID</th>
+                                    <th hidden>ID</th>
                                     <th>Nombre</th>
                                     <th>Descripción</th>
                                     <th>Precio</th>
@@ -83,7 +83,7 @@ $productos = $datos['productos'];
                             <tbody>
                                 <?php foreach ($productos as $p): ?>
                                     <tr>
-                                        <td><?= $p['ID_pro']; ?></td>
+                                        <td hidden><?= $p['ID_pro']; ?></td>
                                         <td><?= htmlspecialchars($p['Nombre_pro']) ?></td>
                                         <td><?= htmlspecialchars($p['Descripcion_pro']) ?></td>
                                         <td>Q<?= number_format($p['Precio_pro'], 2) ?></td>

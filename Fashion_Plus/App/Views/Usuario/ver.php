@@ -75,7 +75,7 @@ $usuarios = $datos['usuarios'];
                         <table class="table table-bordered table-hover" id="usuariosTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th hidden>ID</th>
                                     <th>Usuario</th>
                                     <th>Rol</th>
                                     <th>Estado</th>
@@ -86,7 +86,7 @@ $usuarios = $datos['usuarios'];
                             <tbody>
                                 <?php foreach ($usuarios as $u): ?>
                                     <tr>
-                                        <td><?= $u['ID_us']; ?></td>
+                                        <td hidden><?= $u['ID_us']; ?></td>
                                         <td><?= htmlspecialchars($u['usuario']) ?></td>
                                         <td><?= ucfirst($u['Rol_us']) ?></td>
                                         <td>

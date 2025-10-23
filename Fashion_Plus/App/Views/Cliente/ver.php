@@ -74,7 +74,7 @@ $clientes = $datos['clientes'];
                         <table class="table table-bordered table-hover" id="clienteTable">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th>ID</th>
+                                    <th hidden>ID</th>
                                     <th>Empresa</th>
                                     <th>Nombre</th>
                                     <th>Apellido</th>
@@ -87,7 +87,7 @@ $clientes = $datos['clientes'];
                             <tbody>
                                 <?php foreach ($clientes as $c): ?>
                                     <tr>
-                                        <td><?= $c['ID_cli']; ?></td>
+                                        <td hidden><?= $c['ID_cli']; ?></td>
                                         <td><?= htmlspecialchars($c['Nombre_emp']) ?></td>
                                         <td><?= htmlspecialchars($c['Nombre_cli']) ?></td>
                                         <td><?= htmlspecialchars($c['Apellido_cli']) ?></td>

@@ -73,7 +73,7 @@ if (!isset($_SESSION['usuario'])) {
                         <table class="table table-bordered table-hover" id="empresaTable">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th>ID</th>
+                                    <th hidden>ID</th>
                                     <th>Nombre</th>
                                     <th>NIT</th>
                                     <th>Contacto</th>
@@ -86,7 +86,7 @@ if (!isset($_SESSION['usuario'])) {
                             <tbody>
                                 <?php foreach ($empresas as $e): ?>
                                     <tr>
-                                        <td><?= $e['ID_emp']; ?></td>
+                                        <td hidden><?= $e['ID_emp']; ?></td>
                                         <td><?= htmlspecialchars($e['Nombre_emp']) ?></td>
                                         <td><?= htmlspecialchars($e['NIT_emp']) ?></td>
                                         <td><?= htmlspecialchars($e['Contacto_emp']) ?></td>
