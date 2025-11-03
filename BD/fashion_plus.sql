@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 22-10-2025 a las 07:05:12
+-- Tiempo de generación: 03-11-2025 a las 03:56:07
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -31,6 +31,30 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spActualizarUsuario` (IN `p_id` INT
         Rol_us = p_rol,
         Estado_us = p_estado
     WHERE ID_us = p_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spDashboard_KPIs_Estados` (IN `p_ini` DATE, IN `p_fin` DATE)   BEGIN
+    SELECT
+        COUNT(p.ID_ped) AS total_pedidos,
+        IFNULL(SUM(p.Total_ped), 0) AS total_ventas_brutas,
+        (
+            SELECT IFNULL(SUM(a.Monto_abono),0)
+            FROM abono a
+            WHERE a.Fecha_abono BETWEEN p_ini AND p_fin
+        ) AS total_abonos,
+        (IFNULL(SUM(p.Total_ped),0) -
+         (
+            SELECT IFNULL(SUM(a2.Monto_abono),0)
+            FROM abono a2
+            WHERE a2.Fecha_abono BETWEEN p_ini AND p_fin
+         )) AS saldo_pendiente
+    FROM pedido p
+    WHERE p.Fecha_ped BETWEEN p_ini AND p_fin;
+
+    SELECT p.Estado AS estado, COUNT(*) AS cantidad
+    FROM pedido p
+    WHERE p.Fecha_ped BETWEEN p_ini AND p_fin
+    GROUP BY p.Estado;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spEditarCliente` (IN `p_ID_cli` INT, IN `p_ID_emp` INT, IN `p_Nombre_cli` VARCHAR(150), IN `p_Apellido_cli` VARCHAR(150), IN `p_Telefono_cli` VARCHAR(11), IN `p_Direccion_cli` VARCHAR(200), IN `p_Correo_cli` VARCHAR(150))   BEGIN
@@ -324,7 +348,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerPedidos` ()   BEGIN
 		FROM abono
 		GROUP BY ID_ped
 	) ab ON ab.ID_ped = p.ID_ped
-	ORDER BY p.ID_ped DESC;
+	ORDER BY p.Estado DESC, p.Fecha_ped DESC;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `spVerProductos` ()   BEGIN
@@ -359,10 +383,17 @@ CREATE TABLE `abono` (
 --
 
 INSERT INTO `abono` (`ID_abono`, `ID_ped`, `Fecha_abono`, `Monto_abono`) VALUES
-(4, 1, '2025-10-20', 100.00),
-(5, 1, '2025-10-20', 20.00),
-(7, 3, '2025-10-22', 10.00),
-(10, 3, '2025-10-22', 50.00);
+(11, 4, '2025-10-23', 50.00),
+(30, 6, '2025-11-02', 50.00),
+(31, 6, '2025-11-02', 50.00),
+(59, 3, '2025-10-22', 10.00),
+(60, 3, '2025-10-22', 50.00),
+(61, 3, '2025-11-02', 45.00),
+(62, 1, '2025-10-20', 100.00),
+(63, 1, '2025-10-20', 20.00),
+(64, 1, '2025-11-02', 100.00),
+(66, 5, '2025-11-02', 110.00),
+(67, 5, '2025-11-03', 50.00);
 
 -- --------------------------------------------------------
 
@@ -386,7 +417,10 @@ CREATE TABLE `cliente` (
 
 INSERT INTO `cliente` (`ID_cli`, `ID_emp`, `Nombre_cli`, `Apellido_cli`, `Telefono_cli`, `Direccion_cli`, `Correo_cli`) VALUES
 (3, 2, 'Juan Marcos', 'Lopez', '87569830', 'Calzada Roosevelt 10-20, Zona 7', 'jl@gmail.com'),
-(8, 6, 'Javier', 'Avalos', '77777777', 'Calzada Roosevelt 10-20, Zona 7', 'jl@gmail.com');
+(8, 6, 'Javier', 'Avalos', '77777777', 'Calzada Roosevelt 10-20, Zona 7', 'jl@gmail.com'),
+(9, 1, 'Rosa ', 'Muñoz', '78546325', '12 calle zona 1', 'rm@hotmail.com'),
+(10, 6, 'Mario', 'Lopez', '85968596', 'Km 9 carretera al Atlantico', 'ml@gmail.com'),
+(11, 5, 'Dana', 'Perez', '85852020', 'Zona 17 ', 'dp@gmail.com');
 
 -- --------------------------------------------------------
 
@@ -408,9 +442,16 @@ CREATE TABLE `detalle_pedido` (
 
 INSERT INTO `detalle_pedido` (`ID_det`, `ID_ped`, `ID_pro`, `Cantidad_det`, `PrecioUnitario_det`) VALUES
 (18, 2, 2, 10, 75.00),
-(34, 3, 4, 1, 60.00),
-(35, 3, 2, 1, 75.00),
-(36, 1, 2, 2, 75.00);
+(41, 4, 4, 1, 60.00),
+(42, 4, 2, 1, 75.00),
+(64, 6, 5, 3, 90.00),
+(80, 3, 4, 1, 60.00),
+(81, 3, 2, 1, 75.00),
+(82, 1, 2, 3, 75.00),
+(91, 7, 4, 1, 60.00),
+(92, 7, 2, 2, 75.00),
+(93, 5, 4, 1, 60.00),
+(94, 5, 2, 2, 75.00);
 
 -- --------------------------------------------------------
 
@@ -459,9 +500,13 @@ CREATE TABLE `pedido` (
 --
 
 INSERT INTO `pedido` (`ID_ped`, `ID_cli`, `ID_us`, `Fecha_ped`, `Descuento`, `Total_ped`, `Estado`) VALUES
-(1, 8, 2, '2025-09-29', 10.00, 140.00, 'en proceso'),
+(1, 8, 2, '2025-09-29', 5.00, 220.00, 'completado'),
 (2, 3, 2, '2025-10-18', 100.00, 650.00, 'pendiente'),
-(3, 8, 2, '2025-10-20', 30.00, 105.00, 'en proceso');
+(3, 8, 2, '2025-10-20', 30.00, 105.00, 'completado'),
+(4, 9, 2, '2025-10-23', 10.00, 125.00, 'pendiente'),
+(5, 10, 2, '2025-11-02', 0.00, 210.00, 'en proceso'),
+(6, 11, 2, '2025-11-02', 0.00, 270.00, 'en proceso'),
+(7, 3, 2, '2025-11-03', 50.00, 160.00, 'pendiente');
 
 -- --------------------------------------------------------
 
@@ -482,7 +527,8 @@ CREATE TABLE `producto` (
 
 INSERT INTO `producto` (`ID_pro`, `Nombre_pro`, `Descripcion_pro`, `Precio_pro`) VALUES
 (2, 'Polo Sincatex', 'Camisa tipo polo en tela sincatex', 75.00),
-(4, 'Chaleco', 'Chaleco de tela', 60.00);
+(4, 'Chaleco', 'Chaleco de tela', 60.00),
+(5, 'Polo Algodon ', 'Camisa tipo polo de algodon', 90.00);
 
 -- --------------------------------------------------------
 
@@ -574,19 +620,19 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `abono`
 --
 ALTER TABLE `abono`
-  MODIFY `ID_abono` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `ID_abono` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT de la tabla `cliente`
 --
 ALTER TABLE `cliente`
-  MODIFY `ID_cli` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `ID_cli` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_pedido`
 --
 ALTER TABLE `detalle_pedido`
-  MODIFY `ID_det` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `ID_det` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
 
 --
 -- AUTO_INCREMENT de la tabla `empresa`
@@ -598,13 +644,13 @@ ALTER TABLE `empresa`
 -- AUTO_INCREMENT de la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  MODIFY `ID_ped` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `ID_ped` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `producto`
 --
 ALTER TABLE `producto`
-  MODIFY `ID_pro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `ID_pro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
