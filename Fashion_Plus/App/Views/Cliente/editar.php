@@ -17,6 +17,7 @@ $empresas = $datos['empresas'];
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
+    <link rel="icon" type="image/png" href="<?= URL ?>public/img/Icono.png">
 </head>
 <body>
 <!-- Sidebar -->
@@ -33,6 +34,7 @@ $empresas = $datos['empresas'];
         <li><a href="<?= URL ?>cliente/ver" class="active"><i class="fas fa-user-tie"></i> Clientes</a></li>
         <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>pedido/ver"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
+        <li><a href="<?= URL ?>dashboard/ver"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -56,7 +58,7 @@ $empresas = $datos['empresas'];
                     <div class="form-section mb-4">
                         <h5 class="section-title"><i class="fas fa-building fa-rosado"></i> Empresa Relacionada</h5>
                         <div class="mb-3">
-                            <label class="form-label">Empresa:</label>
+                            <label class="form-label">Empresa <span class="text-danger">*</span></label>
                             <select name="ID_emp" class="form-select" required>
                                 <option value="">Seleccione una empresa</option>
                                 <?php foreach ($empresas as $e): ?>
@@ -73,11 +75,11 @@ $empresas = $datos['empresas'];
                         <h5 class="section-title"><i class="fas fa-user fa-rosado"></i> Datos Personales</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Nombre:</label>
+                                <label class="form-label">Nombre <span class="text-danger">*</span></label>
                                 <input type="text" name="nombre" class="form-control" value="<?= $cliente['Nombre_cli'] ?>" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Apellido:</label>
+                                <label class="form-label">Apellido <span class="text-danger">*</span></label>
                                 <input type="text" name="apellido" class="form-control" value="<?= $cliente['Apellido_cli'] ?>" required>
                             </div>
                         </div>
@@ -88,16 +90,16 @@ $empresas = $datos['empresas'];
                         <h5 class="section-title"><i class="fas fa-envelope fa-rosado"></i> Información de Contacto</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Teléfono:</label>
+                                <label class="form-label">Teléfono <span class="text-danger">*</span></label>
                                 <input type="text" name="telefono" class="form-control" value="<?= $cliente['Telefono_cli'] ?>" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Correo:</label>
+                                <label class="form-label">Correo <span class="text-danger">*</span></label>
                                 <input type="email" name="correo" class="form-control" value="<?= $cliente['Correo_cli'] ?>" required>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Dirección:</label>
+                            <label class="form-label">Dirección <span class="text-danger">*</span></label>
                             <input type="text" name="direccion" class="form-control" value="<?= $cliente['Direccion_cli'] ?>" required>
                         </div>
                     </div>

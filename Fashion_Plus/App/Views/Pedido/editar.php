@@ -1,7 +1,4 @@
 <?php
-/* ================================================
-   VALIDACIÓN DE SESIÓN Y DATOS INICIALES
-   ================================================ */
 if (!isset($_SESSION)) session_start();
 if (!isset($_SESSION['usuario'])) { header('Location: ' . URL . 'usuario/login'); exit; }
 
@@ -53,9 +50,8 @@ function h($s){ return htmlspecialchars((string)$s); }
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
+    <link rel="icon" type="image/png" href="<?= URL ?>public/img/Icono.png">
     <style>
-        /* ========== ESTILOS PERSONALIZADOS ==========
-           Igual que en registrar.php */
         .section-title { color: var(--secondary); margin-bottom: 1rem; }
         .resumen-pedido { background-color: #f8f9fa; }
         .resumen-pedido span { font-size: .95rem; }
@@ -66,9 +62,6 @@ function h($s){ return htmlspecialchars((string)$s); }
 
 <body>
 
-<!-- ===============================================
-     SIDEBAR - igual que en registrar.php
-     =============================================== -->
 <div class="sidebar">
     <div class="sidebar-header"><h3>Fashion Plus</h3></div>
     <ul class="sidebar-menu">
@@ -80,17 +73,13 @@ function h($s){ return htmlspecialchars((string)$s); }
         <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
         <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>pedido/ver" class="active"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
+        <li><a href="<?= URL ?>dashboard/ver"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
 
-<!-- ===============================================
-     CONTENIDO PRINCIPAL
-     =============================================== -->
 <div class="main-content">
     <div class="content-container">
-
-        <!-- Encabezado del formulario -->
         <div class="header">
             <div class="header-title">
                 <h1><i class="fas fa-shopping-cart fa-rosado"></i> Editar Pedido #<?= h($idPed) ?></h1>
@@ -98,7 +87,6 @@ function h($s){ return htmlspecialchars((string)$s); }
             </div>
         </div>
 
-        <!-- Mostrar errores si existen -->
         <?php if (!empty($errores)): ?>
             <div class="alert alert-danger">
                 <h6 class="mb-2"><i class="fas fa-exclamation-triangle"></i> Revise la información:</h6>
@@ -108,13 +96,8 @@ function h($s){ return htmlspecialchars((string)$s); }
             </div>
         <?php endif; ?>
 
-        <!-- ===============================================
-             TARJETA PRINCIPAL DEL FORMULARIO
-             =============================================== -->
         <div class="card">
             <div class="card-body">
-
-                <!-- Formulario completo (igual que registrar.php) -->
                 <form method="POST" action="<?= URL ?>pedido/editar" id="editarForm">
                     <input type="hidden" name="ID_ped" value="<?= h($idPed) ?>">
 
@@ -226,7 +209,6 @@ function h($s){ return htmlspecialchars((string)$s); }
                                     </tr>
                                 </thead>
                                 <tbody id="abonosBody">
-                                    <!-- Abonos existentes del pedido -->
                                     <?php if (!empty($abonosData)): ?>
                                         <?php foreach ($abonosData as $ab): ?>
                                             <tr>
@@ -319,9 +301,6 @@ function h($s){ return htmlspecialchars((string)$s); }
     </tr>
 </template>
 
-<!-- ===============================================
-     JAVASCRIPT PRINCIPAL
-     =============================================== -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // === Elementos base ===
@@ -379,37 +358,73 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         const desc=parseFloat(descuentoInput.value||0);
         const total=Math.max(subtotal-desc,0);
-        const saldo=Math.max(total-abonadoServidor,0);
+        // calcular abonos visibles actualmente
+        let abonado=0;
+        abonosBody.querySelectorAll('.monto-abono-input').forEach(inp=>{
+            abonado += parseFloat(inp.value||0);
+        });
+        const saldo=Math.max(total-abonado,0);
         subtotalSpan.textContent='Q'+subtotal.toFixed(2);
         descuentoSpan.textContent='Q'+desc.toFixed(2);
-        abonoSpan.textContent='Q'+abonadoServidor.toFixed(2);
+        abonoSpan.textContent='Q'+abonado.toFixed(2);
         totalSpan.textContent='Q'+saldo.toFixed(2);
     }
 
     // === Productos dinámicos ===
     function bindProductoRow(row){
-        const sel=row.querySelector('.producto-select');
-        const cant=row.querySelector('.cantidad-input');
-        const pre=row.querySelector('.precio-input');
-        const del=row.querySelector('.remove-row');
-        sel.addEventListener('change',function(){
-            const opt=sel.selectedOptions[0];
-            if(opt&&opt.dataset.precio&&!pre.value) pre.value=parseFloat(opt.dataset.precio).toFixed(2);
+        const sel  = row.querySelector('.producto-select');
+        const cant = row.querySelector('.cantidad-input');
+        const pre  = row.querySelector('.precio-input');
+        const del  = row.querySelector('.remove-row');
+
+        // ⬇️ Siempre actualizar el precio al cambiar de producto
+        sel.addEventListener('change', function () {
+            const opt = sel.selectedOptions[0];
+            const precioOpt = parseFloat(opt?.dataset?.precio ?? 0);
+            if (!isNaN(precioOpt)) {
+            pre.value = (precioOpt > 0 ? precioOpt : 0).toFixed(2);
+            }
             actualizarTotales();
         });
-        cant.addEventListener('input',actualizarTotales);
-        pre.addEventListener('input',actualizarTotales);
-        del.addEventListener('click',()=>{ row.remove(); if(!productosBody.querySelector('tr')) addProductoRow(); actualizarTotales(); });
+
+        cant.addEventListener('input', actualizarTotales);
+        pre.addEventListener('input', actualizarTotales);
+
+        del.addEventListener('click', () => {
+            row.remove();
+            if (!productosBody.querySelector('tr')) addProductoRow();
+            actualizarTotales();
+        });
     }
-    function addProductoRow(id='',cant=1,pre=''){
-        const frag=productoTpl.content.cloneNode(true);
-        const row=frag.querySelector('tr');
-        const s=row.querySelector('.producto-select'); const c=row.querySelector('.cantidad-input'); const p=row.querySelector('.precio-input');
-        if(id) s.value=id; c.value=cant;
-        if(pre===''){ const opt=s.selectedOptions[0]; if(opt&&opt.dataset.precio) p.value=parseFloat(opt.dataset.precio).toFixed(2); }
-        else p.value=parseFloat(pre).toFixed(2);
-        productosBody.appendChild(row); bindProductoRow(row); actualizarTotales();
+
+
+    function addProductoRow(id = '', cant = 1, preVal = ''){
+        const frag = productoTpl.content.cloneNode(true);
+        const row  = frag.querySelector('tr');
+
+        const s = row.querySelector('.producto-select');
+        const c = row.querySelector('.cantidad-input');
+        const p = row.querySelector('.precio-input');
+
+        if (id) s.value = id;
+        c.value = cant;
+
+        const preNum = preVal === '' ? NaN : parseFloat(preVal);
+        const optSel = s.selectedOptions[0];
+        const precioOpt = optSel && optSel.dataset.precio ? parseFloat(optSel.dataset.precio) : 0;
+
+        if (isNaN(preNum) || preNum <= 0) {
+            if (precioOpt > 0) p.value = precioOpt.toFixed(2);
+            else p.value = '0.00';
+        } else {
+            p.value = preNum.toFixed(2);
+        }
+
+        productosBody.appendChild(row);
+        bindProductoRow(row);
+        actualizarTotales();
     }
+
     addProdBtn?.addEventListener('click',()=>addProductoRow());
 
     // === Abonos dinámicos ===
@@ -426,12 +441,29 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     addAbonoBtn?.addEventListener('click',()=>addAbonoRow());
 
+    // 🔹 NUEVO: Enlaza eliminación en filas de abonos existentes (las que ya vienen desde PHP)
+    abonosBody.querySelectorAll('tr').forEach(row=>{
+        if(row.querySelector('.remove-row')) bindAbonoRow(row);
+    });
+
+    // 🔹 NUEVO: Delegación de eventos por si se agregan dinámicamente
+    abonosBody.addEventListener('click',function(e){
+        const btn=e.target.closest('.remove-row');
+        if(!btn) return;
+        const tr=btn.closest('tr');
+        if(tr){ tr.remove(); actualizarTotales(); }
+    });
+
     // === Inicializar productos ===
-    if(filasIniciales.length){ filasIniciales.forEach(f=>addProductoRow(f.producto_id,f.cantidad,f.precio)); } else addProductoRow();
+    if(filasIniciales.length){ 
+        filasIniciales.forEach(f=>addProductoRow(f.producto_id,f.cantidad,f.precio)); 
+    } else addProductoRow();
+
     actualizarTotales();
     descuentoInput.addEventListener('input',actualizarTotales);
 });
 </script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

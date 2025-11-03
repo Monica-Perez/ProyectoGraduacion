@@ -14,10 +14,11 @@ if (!isset($_SESSION['usuario'])) {
 <head>
     <meta charset="UTF-8">
     <title>Empresas</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Asegura jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
+    <link rel="icon" type="image/png" href="<?= URL ?>public/img/Icono.png">
 </head>
 <body>
 <div class="sidebar">
@@ -31,6 +32,7 @@ if (!isset($_SESSION['usuario'])) {
         <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
         <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>pedido/ver"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
+        <li><a href="<?= URL ?>dashboard/ver"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -80,7 +82,7 @@ if (!isset($_SESSION['usuario'])) {
                                     <th>Teléfono</th>
                                     <th>Dirección</th>
                                     <th>Correo</th>
-                                    <th>Editar</th>
+                                    <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -93,17 +95,14 @@ if (!isset($_SESSION['usuario'])) {
                                         <td><?= sprintf("%s-%s", substr($e['Telefono_emp'], 0, 4), substr($e['Telefono_emp'], 4, 4)) ?></td>
                                         <td><?= htmlspecialchars($e['Direccion_emp']) ?></td>
                                         <td><?= htmlspecialchars($e['Correo_emp']) ?></td>
-                                        <td>
-                                            <a href="<?= URL ?>empresa/editar/<?= $e['ID_emp'] ?>" class="btn btn-warning btn-sm">
+                                        <td class="text-center">
+                                            <a href="<?= URL ?>empresa/editar/<?= $e['ID_emp'] ?>" class="btn btn-outline-warning btn-sm">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-
-                                            <a href="<?= URL ?>empresa/eliminar/<?= $e['ID_emp'] ?>" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta empresa?');">
-                                                <i class="fas fa-trash-alt"></i>
+                                            <a href="<?= URL ?>empresa/eliminar/<?= $e['ID_emp'] ?>" class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta empresa?');">
+                                                <i class="fas fa-trash"></i>
                                             </a>
-
                                         </td>
-
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

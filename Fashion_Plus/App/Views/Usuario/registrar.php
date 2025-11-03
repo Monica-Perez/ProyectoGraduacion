@@ -15,6 +15,7 @@ if (!isset($_SESSION['usuario'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
+    <link rel="icon" type="image/png" href="<?= URL ?>public/img/Icono.png">
 </head>
 <body>
 <!-- Sidebar -->
@@ -31,6 +32,7 @@ if (!isset($_SESSION['usuario'])) {
         <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
         <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>pedido/ver"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
+        <li><a href="<?= URL ?>dashboard/ver"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -52,30 +54,43 @@ if (!isset($_SESSION['usuario'])) {
 
             <div class="card-body">
                 <form method="POST" action="<?= URL ?>usuario/registrar">
-                    <div class="mb-3">
-                        <label class="form-label">Usuario</label> <span class="text-danger">*</span>
-                        <input type="text" name="usuario" class="form-control" required>
+                    <!-- ===== Sección: Datos Generales ===== -->
+                    <div class="form-section">
+                        <h5 class="section-title"><i class="fas fa-info-circle fa-rosado"></i> Datos Generales</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre de Usuario <span class="text-danger">*</span></label>
+                                <input type="text" name="usuario" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Contraseña <span class="text-danger">*</span></label>
+                                <input type="password" name="contrasena" class="form-control" required>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Contraseña</label> <span class="text-danger">*</span>
-                        <input type="password" name="pass" class="form-control" required>
-                    </div>
+                    <!-- ===== Sección: Estado y Acceso ===== -->
+                    <div class="form-section">
+                        <h5 class="section-title"><i class="fas fa-user-shield fa-rosado"></i> Estado y Acceso</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Rol <span class="text-danger">*</span></label>
+                                <select name="rol" class="form-select" required>
+                                    <option value="" disabled selected>Seleccione…</option>
+                                    <option value="admin">Administrador</option>
+                                    <option value="vendedor">Vendedor</option>
+                                </select>
+                            </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Rol</label> <span class="text-danger">*</span>
-                        <select name="rol" class="form-select" required>
-                            <option value="admin">Admin</option>
-                            <option value="vendedor">Vendedor</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Estado</label> <span class="text-danger">*</span>
-                        <select name="estado" class="form-select" required>
-                            <option value="activo">Activo</option>
-                            <option value="inactivo">Inactivo</option>
-                        </select>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Estado <span class="text-danger">*</span></label>
+                                <select name="estado" class="form-select" required>
+                                    <option value="activo">Activo</option>
+                                    <option value="inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group text-end">

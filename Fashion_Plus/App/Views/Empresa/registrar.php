@@ -16,6 +16,7 @@ if (!isset($_SESSION['usuario'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
+    <link rel="icon" type="image/png" href="<?= URL ?>public/img/Icono.png">
 </head>
 <body>
 
@@ -33,6 +34,7 @@ if (!isset($_SESSION['usuario'])) {
         <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
         <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>pedido/ver"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
+        <li><a href="<?= URL ?>dashboard/ver"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>

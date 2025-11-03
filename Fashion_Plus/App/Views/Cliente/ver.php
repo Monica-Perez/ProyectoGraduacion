@@ -16,6 +16,7 @@ $clientes = $datos['clientes'];
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
+    <link rel="icon" type="image/png" href="<?= URL ?>public/img/Icono.png">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body>
@@ -33,6 +34,7 @@ $clientes = $datos['clientes'];
         <li><a href="<?= URL ?>cliente/ver" class="active"><i class="fas fa-user-tie"></i> Clientes</a></li>
         <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>pedido/ver"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
+        <li><a href="<?= URL ?>dashboard/ver"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -81,7 +83,7 @@ $clientes = $datos['clientes'];
                                     <th>Teléfono</th>
                                     <th>Dirección</th>
                                     <th>Correo</th>
-                                    <th>Acciones</th>
+                                    <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -94,13 +96,13 @@ $clientes = $datos['clientes'];
                                         <td><?= sprintf("%s-%s", substr($c['Telefono_cli'], 0, 4), substr($c['Telefono_cli'], 4, 4)) ?></td>
                                         <td><?= htmlspecialchars($c['Direccion_cli']) ?></td>
                                         <td><?= htmlspecialchars($c['Correo_cli']) ?></td>
-                                        <td>
-                                            <a href="<?= URL ?>cliente/editar/<?= $c['ID_cli'] ?>" class="btn btn-sm btn-warning" title="Editar">
+                                        <td class="text-center">
+                                            <a href="<?= URL ?>cliente/editar/<?= $c['ID_cli'] ?>" class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="<?= URL ?>cliente/eliminar/<?= $c['ID_cli'] ?>" class="btn btn-sm btn-danger" title="Eliminar" 
+                                            <a href="<?= URL ?>cliente/eliminar/<?= $c['ID_cli'] ?>" class="btn btn-sm btn-outline-danger" title="Eliminar" 
                                                 onclick="return confirm('¿Estás seguro de eliminar este cliente?');">
-                                                <i class="fas fa-trash-alt"></i>
+                                                <i class="fas fa-trash"></i>
                                             </a>
                                         </td>
                                     </tr>

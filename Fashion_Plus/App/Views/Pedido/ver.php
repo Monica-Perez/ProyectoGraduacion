@@ -26,6 +26,7 @@ function estadoBadgeClass($estado) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
+    <link rel="icon" type="image/png" href="<?= URL ?>public/img/Icono.png">
 </head>
 <body>
 <div class="sidebar">
@@ -39,6 +40,7 @@ function estadoBadgeClass($estado) {
         <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
         <li><a href="<?= URL ?>producto/ver"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>pedido/ver" class="active"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
+        <li><a href="<?= URL ?>dashboard/ver"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -119,8 +121,7 @@ function estadoBadgeClass($estado) {
                                         <td class="text-center">
                                             <div class="btn-group" role="group">
                                                 <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#<?= $collapseId; ?>" aria-expanded="false" aria-controls="<?= $collapseId; ?>" 
-                                                    title="Ver detalle rápido">
-                                                    <i class="fas fa-eye"></i>
+                                                    title="Ver detalle rápido"><i class="fas fa-eye"></i>
                                                 </button>
                                                 <a href="<?= URL ?>pedido/editar/<?= (int)$pedido['ID_ped']; ?>" class="btn btn-sm btn-outline-warning" title="Editar pedido">
                                                     <i class="fas fa-edit"></i>

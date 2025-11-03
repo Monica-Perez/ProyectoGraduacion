@@ -17,6 +17,7 @@ $productos = $datos['productos'];
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?= URL ?>public/css/estilos.css">
+    <link rel="icon" type="image/png" href="<?= URL ?>public/img/Icono.png">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body>
@@ -33,6 +34,7 @@ $productos = $datos['productos'];
         <li><a href="<?= URL ?>cliente/ver"><i class="fas fa-user-tie"></i> Clientes</a></li>
         <li><a href="<?= URL ?>producto/ver" class="active"><i class="fas fa-box"></i> Productos</a></li>
         <li><a href="<?= URL ?>pedido/ver"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
+        <li><a href="<?= URL ?>dashboard/ver"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
         <li><a href="<?= URL ?>usuario/logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
     </ul>
 </div>
@@ -77,7 +79,7 @@ $productos = $datos['productos'];
                                     <th>Nombre</th>
                                     <th>Descripción</th>
                                     <th>Precio</th>
-                                    <th>Acciones</th>
+                                    <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -87,12 +89,12 @@ $productos = $datos['productos'];
                                         <td><?= htmlspecialchars($p['Nombre_pro']) ?></td>
                                         <td><?= htmlspecialchars($p['Descripcion_pro']) ?></td>
                                         <td>Q<?= number_format($p['Precio_pro'], 2) ?></td>
-                                        <td>
-                                            <a href="<?= URL ?>producto/editar/<?= $p['ID_pro'] ?>" class="btn btn-sm btn-warning" title="Editar">
+                                        <td class="text-center">
+                                            <a href="<?= URL ?>producto/editar/<?= $p['ID_pro'] ?>" class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="<?= URL ?>producto/eliminar/<?= $p['ID_pro'] ?>" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este producto?');">
-                                                <i class="fas fa-trash-alt"></i>
+                                            <a href="<?= URL ?>producto/eliminar/<?= $p['ID_pro'] ?>" class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este producto?');">
+                                                <i class="fas fa-trash"></i>
                                             </a>
                                         </td>
                                     </tr>

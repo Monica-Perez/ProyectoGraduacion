@@ -11,7 +11,7 @@ class UsuarioController extends Controller {
             if ($usuario) {
                 session_start();
                 $_SESSION['usuario'] = $usuario;
-                header('Location: ' . URL . 'dashboard');
+                header('Location: ' . URL . 'index');
             } else {
                 $this->view('usuario/login', ['error' => 'Credenciales incorrectas']);
             }
